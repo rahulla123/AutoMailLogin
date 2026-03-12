@@ -13,6 +13,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT")
     implementation("org.xerial:sqlite-jdbc:3.49.1.0")
+    implementation("com.mysql:mysql-connector-j:9.2.0")
     implementation("org.eclipse.angus:jakarta.mail:2.0.3")
 }
 

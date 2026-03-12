@@ -1,21 +1,23 @@
 package dev.wuliclaw.automaillogin.listener;
 
 import dev.wuliclaw.automaillogin.AutoMailLoginPlugin;
+import dev.wuliclaw.automaillogin.gui.AuthMenuHolder;
 import dev.wuliclaw.automaillogin.service.AuthService;
 import dev.wuliclaw.automaillogin.service.PlayerSessionService;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.List;
@@ -43,16 +45,16 @@ public final class AuthRestrictionListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onMove(PlayerMoveEvent event) {
-        if (isBlocked(event.getPlayer()) && movedBlock(event)) {
+        if (plugin.getConfig().getBoolean("restriction.block-move", true) && isBlocked(event.getPlayer()) && movedBlock(event)) {
             event.setTo(event.getFrom());
         }
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onChat(AsyncPlayerChatEvent event) {
-        if (isBlocked(event.getPlayer())) {
+    public void onChat(AsyncChatEvent event) {
+        if (plugin.getConfig().getBoolean("restriction.block-chat", true) && isBlocked(event.getPlayer())) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage("§c请先登录。");
+            event.getPlayer().sendMessage(Component.text("请先登录。"));
         }
     }
 
@@ -63,38 +65,45 @@ public final class AuthRestrictionListener implements Listener {
         }
         String input = event.getMessage().toLowerCase();
         List<String> allowedCommands = plugin.getConfig().getStringList("restriction.allowed-commands");
-        boolean allowed = allowedCommands.stream().anyMatch(input::startsWith);
+        boolean allowed = allowedCommands.stream().anyMatch(input::startsWith) || input.startsWith("/automaillogin menu");
         if (!allowed) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage("§c请先完成登录验证。");
+            event.getPlayer().sendMessage("§c请先完成登录验证。输入 /automaillogin menu 打开认证菜单。");
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent event) {
-        if (isBlocked(event.getPlayer()) && event.getAction() != Action.PHYSICAL) {
+        if (plugin.getConfig().getBoolean("restriction.block-interact", true) && isBlocked(event.getPlayer()) && event.getAction() != Action.PHYSICAL) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getWhoClicked() instanceof Player player && isBlocked(player)) {
+        if (event.getInventory().getHolder() instanceof AuthMenuHolder) {
+            event.setCancelled(true);
+            return;
+        }
+        if (plugin.getConfig().getBoolean("restriction.block-inventory", true)
+                && event.getWhoClicked() instanceof Player player
+                && isBlocked(player)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onDrop(PlayerDropItemEvent event) {
-        if (isBlocked(event.getPlayer())) {
+        if (plugin.getConfig().getBoolean("restriction.block-drop", true) && isBlocked(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
-    @SuppressWarnings("deprecation")
     @EventHandler(ignoreCancelled = true)
-    public void onPickup(PlayerPickupItemEvent event) {
-        if (isBlocked(event.getPlayer())) {
+    public void onPickup(EntityPickupItemEvent event) {
+        if (plugin.getConfig().getBoolean("restriction.block-pickup", true)
+                && event.getEntity() instanceof Player player
+                && isBlocked(player)) {
             event.setCancelled(true);
         }
     }

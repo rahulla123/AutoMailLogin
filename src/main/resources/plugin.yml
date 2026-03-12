@@ -28,8 +28,8 @@ commands:
     description: Complete second-factor verification by mail code.
     usage: /mail2fa <code>
   automaillogin:
-    description: Main admin command for AutoMailLogin.
-    usage: /automaillogin admin <subcommand>
+    description: Main command for AutoMailLogin.
+    usage: /automaillogin <admin|menu>
 permissions:
   automaillogin.admin:
     default: op

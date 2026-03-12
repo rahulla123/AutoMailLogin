@@ -20,7 +20,7 @@ public final class SmtpMailSender {
         this.plugin = plugin;
     }
 
-    public void send(String to, String subject, String content) {
+    public boolean send(String to, String subject, String content) {
         Properties properties = new Properties();
         properties.put("mail.smtp.host", plugin.getConfig().getString("mail.smtp.host", ""));
         properties.put("mail.smtp.port", String.valueOf(plugin.getConfig().getInt("mail.smtp.port", 587)));
@@ -37,6 +37,7 @@ public final class SmtpMailSender {
                 return new PasswordAuthentication(username, password);
             }
         });
+        session.setDebug(plugin.getConfig().getBoolean("mail.smtp.debug", false));
 
         try {
             MimeMessage message = new MimeMessage(session);
@@ -49,10 +50,13 @@ public final class SmtpMailSender {
             message.setSubject(subject, StandardCharsets.UTF_8.name());
             message.setText(content, StandardCharsets.UTF_8.name());
             Transport.send(message);
+            return true;
         } catch (MessagingException exception) {
-            throw new IllegalStateException("Failed to send SMTP mail", exception);
+            plugin.getLogger().warning("SMTP send failed: " + exception.getMessage());
+            return false;
         } catch (Exception exception) {
-            throw new IllegalStateException("Failed to build SMTP mail", exception);
+            plugin.getLogger().warning("SMTP mail build failed: " + exception.getMessage());
+            return false;
         }
     }
 }

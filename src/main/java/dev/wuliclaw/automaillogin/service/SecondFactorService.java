@@ -4,8 +4,11 @@ import dev.wuliclaw.automaillogin.AutoMailLoginPlugin;
 import dev.wuliclaw.automaillogin.model.PlayerAccount;
 import dev.wuliclaw.automaillogin.model.VerificationPurpose;
 import dev.wuliclaw.automaillogin.security.SecondFactorMode;
+import dev.wuliclaw.automaillogin.storage.StorageProvider;
 import org.bukkit.entity.Player;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,31 +16,34 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class SecondFactorService {
     private final AutoMailLoginPlugin plugin;
     private final VerificationService verificationService;
+    private final StorageProvider storageProvider;
     private final Map<UUID, Boolean> pendingSecondFactor = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> forceAfterReset = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> forceByAdmin = new ConcurrentHashMap<>();
 
-    public SecondFactorService(AutoMailLoginPlugin plugin, VerificationService verificationService) {
+    public SecondFactorService(AutoMailLoginPlugin plugin, VerificationService verificationService, StorageProvider storageProvider) {
         this.plugin = plugin;
         this.verificationService = verificationService;
+        this.storageProvider = storageProvider;
     }
 
     public boolean shouldRequireSecondFactor(Player player, PlayerAccount account) {
         boolean enabled = plugin.getConfig().getBoolean("security.second-factor.enabled", true);
-        if (!enabled) {
+        if (!enabled || account.isTrusted()) {
             return false;
         }
         SecondFactorMode mode = SecondFactorMode.fromConfig(plugin.getConfig().getString("security.second-factor.mode", "on_new_ip"));
         String currentIp = player.getAddress() == null ? null : player.getAddress().getAddress().getHostAddress();
+        boolean newIp = currentIp != null && account.getLastIp() != null && !currentIp.equals(account.getLastIp());
         return switch (mode) {
             case DISABLED -> false;
             case ALWAYS -> true;
-            case ON_NEW_IP -> currentIp != null && account.getLastIp() != null && !currentIp.equals(account.getLastIp());
+            case ON_NEW_IP -> newIp;
             case ON_PASSWORD_RESET -> forceAfterReset.getOrDefault(player.getUniqueId(), false);
             case ON_ADMIN_FORCE -> forceByAdmin.getOrDefault(player.getUniqueId(), false);
             case MIXED -> forceAfterReset.getOrDefault(player.getUniqueId(), false)
                     || forceByAdmin.getOrDefault(player.getUniqueId(), false)
-                    || (currentIp != null && account.getLastIp() != null && !currentIp.equals(account.getLastIp()));
+                    || newIp;
         };
     }
 
@@ -52,6 +58,14 @@ public final class SecondFactorService {
             pendingSecondFactor.remove(player.getUniqueId());
             forceAfterReset.remove(player.getUniqueId());
             forceByAdmin.remove(player.getUniqueId());
+            PlayerAccount account = storageProvider.findByUniqueId(player.getUniqueId()).orElse(null);
+            if (account != null) {
+                int trustedDays = plugin.getConfig().getInt("security.second-factor.trusted-days", 30);
+                if (trustedDays > 0) {
+                    account.setTrustedUntil(Instant.now().plus(trustedDays, ChronoUnit.DAYS));
+                    storageProvider.save(account);
+                }
+            }
         }
         return success;
     }

@@ -8,5 +8,6 @@ import java.util.UUID;
 public interface StorageProvider {
     void initialize();
     Optional<PlayerAccount> findByUniqueId(UUID uniqueId);
+    Optional<PlayerAccount> findByPlayerName(String playerName);
     void save(PlayerAccount account);
 }
