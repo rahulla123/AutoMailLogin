@@ -41,7 +41,7 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
         switch (subcommand) {
             case "force2fa" -> {
                 if (target == null) {
-                    sender.sendMessage("§cforce2fa 需要目标在线。);");
+                    sender.sendMessage("§cforce2fa 需要目标在线。");
                     return true;
                 }
                 authService.forceSecondFactor(target);
@@ -66,7 +66,7 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             }
             case "unbindmail" -> {
                 if (target == null) {
-                    sender.sendMessage("§cunbindmail 需要目标在线。);");
+                    sender.sendMessage("§cunbindmail 需要目标在线。");
                     return true;
                 }
                 authService.unbindEmail(target);
@@ -75,7 +75,7 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             }
             case "resetauth" -> {
                 if (target == null) {
-                    sender.sendMessage("§cresetauth 需要目标在线。);");
+                    sender.sendMessage("§cresetauth 需要目标在线。");
                     return true;
                 }
                 authService.resetAuthState(target);
