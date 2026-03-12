@@ -1,0 +1,50 @@
+database:
+  type: sqlite
+  sqlite-file: data.db
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: automaillogin
+    username: root
+    password: change_me
+
+mail:
+  mode: mock
+  from-address: no-reply@example.com
+  from-name: AutoMailLogin
+  code-length: 6
+  code-expire-seconds: 300
+  resend-cooldown-seconds: 60
+  smtp:
+    host: smtp.example.com
+    port: 587
+    ssl: false
+    starttls: true
+    username: change_me
+    password: change_me
+    debug: false
+
+security:
+  password-min-length: 8
+  max-login-attempts: 5
+  lock-seconds: 300
+  second-factor:
+    enabled: true
+    mode: on_new_ip
+    trusted-days: 30
+
+restriction:
+  block-move: true
+  block-chat: true
+  block-interact: true
+  block-inventory: true
+  block-drop: true
+  block-pickup: true
+  allowed-commands:
+    - /login
+    - /mailregister
+    - /mailcode
+    - /mail2fa
+    - /setpassword
+    - /forgotpassword
+    - /resetpassword
