@@ -1,0 +1,35 @@
+name: AutoMailLogin
+version: ${version}
+main: dev.wuliclaw.automaillogin.AutoMailLoginPlugin
+api-version: '1.20'
+authors: [WuLiClaw]
+description: Mail-based login and verification plugin for Paper.
+website: https://github.com/
+commands:
+  mailregister:
+    description: Bind your email and request a verification code.
+    usage: /mailregister <email>
+  mailcode:
+    description: Verify the mail code you received.
+    usage: /mailcode <code>
+  setpassword:
+    description: Set your login password.
+    usage: /setpassword <password> <confirm>
+  login:
+    description: Login with your password.
+    usage: /login <password>
+  forgotpassword:
+    description: Request a password reset code.
+    usage: /forgotpassword <email>
+  resetpassword:
+    description: Reset your password using a code.
+    usage: /resetpassword <code> <password> <confirm>
+  mail2fa:
+    description: Complete second-factor verification by mail code.
+    usage: /mail2fa <code>
+  automaillogin:
+    description: Main admin command for AutoMailLogin.
+    usage: /automaillogin admin <subcommand>
+permissions:
+  automaillogin.admin:
+    default: op
