@@ -42,8 +42,13 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         if (args.length >= 3 && "admin".equalsIgnoreCase(args[0]) && "testsmtp".equalsIgnoreCase(args[1])) {
-            boolean success = authService.sendTestMail(args[2]);
-            sender.sendMessage(success ? "§a测试邮件发送请求已完成，请检查邮箱或服务端日志。" : "§c测试邮件发送失败，请检查邮箱格式、SMTP 配置或服务端日志。");
+            boolean valid = authService.sendTestMail(args[2]);
+            if (!valid) {
+                sender.sendMessage("§c测试邮件发送失败，请检查邮箱格式、SMTP 配置或服务端日志。");
+                return true;
+            }
+            sender.sendMessage("§e测试邮件正在异步发送，请稍后检查邮箱或服务端日志。");
+            authService.sendTestMailAsync(args[2], success -> sender.sendMessage(success ? "§a测试邮件发送请求已完成，请检查邮箱或服务端日志。" : "§c测试邮件发送失败，请检查邮箱格式、SMTP 配置或服务端日志。"));
             return true;
         }
         if (args.length < 3 || !"admin".equalsIgnoreCase(args[0])) {

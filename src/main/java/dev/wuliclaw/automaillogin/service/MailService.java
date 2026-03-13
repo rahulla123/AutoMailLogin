@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class MailService {
     private final AutoMailLoginPlugin plugin;
@@ -43,14 +44,18 @@ public final class MailService {
         send(player, email, VerificationPurpose.SECOND_FACTOR, MailTemplateType.SECOND_FACTOR, messageService.get("second-factor-required", "检测到本次登录需要二次验证，请检查邮箱验证码。"), "§e测试模式：二次验证验证码已输出到服务端控制台。", false);
     }
 
-    public boolean sendTestMail(String email) {
+    public void sendTestMailAsync(String email, Consumer<Boolean> callback) {
         RenderedMailTemplate template = templateService.render(MailTemplateType.TEST_SMTP, baseVariables(null, email, null));
         String mode = plugin.getConfig().getString("mail.mode", "mock");
         if (!"smtp".equalsIgnoreCase(mode)) {
             logMockMail(template, null, email);
-            return true;
+            callback.accept(true);
+            return;
         }
-        return smtpMailSender.send(email, template);
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            boolean success = smtpMailSender.send(email, template);
+            plugin.getServer().getScheduler().runTask(plugin, () -> callback.accept(success));
+        });
     }
 
     private void send(Player player, String email, VerificationPurpose purpose, MailTemplateType templateType, String smtpMessage, String mockMessage, boolean createIfMissing) {
@@ -76,15 +81,22 @@ public final class MailService {
         RenderedMailTemplate template = templateService.render(templateType, baseVariables(player, email, verification));
         String mode = plugin.getConfig().getString("mail.mode", "mock");
         if ("smtp".equalsIgnoreCase(mode)) {
-            boolean success = smtpMailSender.send(email, template);
-            if (success) {
-                player.sendMessage(smtpMessage);
-            } else {
-                player.sendMessage("§c邮件发送失败，请检查 SMTP 配置或稍后重试。");
-            }
+            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                boolean success = smtpMailSender.send(email, template);
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    if (!player.isOnline()) {
+                        return;
+                    }
+                    if (success) {
+                        player.sendMessage(smtpMessage);
+                    } else {
+                        player.sendMessage("§c邮件发送失败，请检查 SMTP 配置或稍后重试。");
+                    }
+                });
+            });
             return;
         }
-        logMockMail(template, player == null ? null : player.getName(), email);
+        logMockMail(template, player.getName(), email);
         player.sendMessage(mockMessage);
     }
 

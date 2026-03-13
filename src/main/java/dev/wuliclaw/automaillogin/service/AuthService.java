@@ -47,10 +47,11 @@ public final class AuthService {
     }
 
     public boolean sendTestMail(String email) {
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
-            return false;
-        }
-        return mailService.sendTestMail(email);
+        return EMAIL_PATTERN.matcher(email).matches();
+    }
+
+    public void sendTestMailAsync(String email, java.util.function.Consumer<Boolean> callback) {
+        mailService.sendTestMailAsync(email, callback);
     }
 
     public void handleJoin(Player player) {
