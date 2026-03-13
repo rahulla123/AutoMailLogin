@@ -6,9 +6,15 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class MailTemplateService {
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([a-zA-Z0-9_]+)}");
+    private static final Set<String> KNOWN_VARIABLES = Set.of("code", "player", "email", "server_name", "expire_seconds", "support_email");
     private final AutoMailLoginPlugin plugin;
     private File templateDirectory;
 
@@ -56,6 +62,14 @@ public final class MailTemplateService {
         return new File(templateDirectory, type.filePrefix() + suffix).exists();
     }
 
+    public Set<String> findUnknownVariables(MailTemplateType type) {
+        Set<String> unknown = new HashSet<>();
+        scanUnknownVariables(type.filePrefix() + ".subject.txt", unknown);
+        scanUnknownVariables(type.filePrefix() + ".text.txt", unknown);
+        scanUnknownVariables(type.filePrefix() + ".html", unknown);
+        return unknown;
+    }
+
     private void refreshTemplateDirectory() {
         this.templateDirectory = new File(plugin.getDataFolder(), plugin.getConfig().getString("mail.template-dir", "templates"));
     }
@@ -80,6 +94,17 @@ public final class MailTemplateService {
             rendered = rendered.replace("${" + entry.getKey() + "}", entry.getValue() == null ? "" : entry.getValue());
         }
         return rendered;
+    }
+
+    private void scanUnknownVariables(String fileName, Set<String> unknown) {
+        String content = readTemplate(fileName);
+        Matcher matcher = PLACEHOLDER_PATTERN.matcher(content);
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            if (!KNOWN_VARIABLES.contains(key)) {
+                unknown.add(key);
+            }
+        }
     }
 
     private void copyIfMissing(String resourcePath) {

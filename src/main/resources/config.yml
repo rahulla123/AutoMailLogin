@@ -41,6 +41,7 @@ mail:
     connection-timeout-ms: 10000
     timeout-ms: 10000
     write-timeout-ms: 10000
+    max-retries: 2
     username: change_me
     password: change_me
     debug: false

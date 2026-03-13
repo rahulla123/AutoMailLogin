@@ -158,7 +158,11 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             boolean subject = plugin.getMailTemplateService().hasTemplate(type, ".subject.txt");
             boolean text = plugin.getMailTemplateService().hasTemplate(type, ".text.txt");
             boolean html = plugin.getMailTemplateService().hasTemplate(type, ".html");
+            java.util.Set<String> unknownVariables = plugin.getMailTemplateService().findUnknownVariables(type);
             sender.sendMessage("§7- 模板 " + type.filePrefix() + ": subject=" + flag(subject) + " text=" + flag(text) + " html=" + flag(html));
+            sender.sendMessage(unknownVariables.isEmpty()
+                    ? "§7  变量检查: §aOK"
+                    : "§7  变量检查: §e未知变量 " + unknownVariables);
         }
     }
 

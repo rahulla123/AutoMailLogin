@@ -57,7 +57,7 @@ public final class MailService {
             return;
         }
         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-            boolean success = smtpMailSender.send(email, template);
+            boolean success = sendWithRetry(email, template);
             plugin.getServer().getScheduler().runTask(plugin, () -> callback.accept(success));
         });
     }
@@ -86,7 +86,7 @@ public final class MailService {
         String mode = plugin.getConfig().getString("mail.mode", "mock");
         if ("smtp".equalsIgnoreCase(mode)) {
             plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                boolean success = smtpMailSender.send(email, template);
+                boolean success = sendWithRetry(email, template);
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
                     if (!player.isOnline()) {
                         return;
@@ -102,6 +102,16 @@ public final class MailService {
         }
         logMockMail(template, player.getName(), email);
         player.sendMessage(mockMessage);
+    }
+
+    private boolean sendWithRetry(String email, RenderedMailTemplate template) {
+        int maxRetries = Math.max(0, plugin.getConfig().getInt("mail.smtp.max-retries", 2));
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            if (smtpMailSender.send(email, template)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void logMockMail(RenderedMailTemplate template, String playerName, String email) {
