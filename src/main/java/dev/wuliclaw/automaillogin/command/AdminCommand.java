@@ -11,6 +11,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +43,10 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§aAutoMailLogin 配置、消息和邮件模板已重载。");
             return true;
         }
+        if (args.length >= 2 && "admin".equalsIgnoreCase(args[0]) && "doctor".equalsIgnoreCase(args[1])) {
+            runDoctor(sender);
+            return true;
+        }
         if (args.length >= 4 && "admin".equalsIgnoreCase(args[0]) && "previewmail".equalsIgnoreCase(args[1])) {
             MailTemplateType templateType = MailTemplateType.fromInput(args[2]);
             if (templateType == null) {
@@ -69,7 +74,7 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         if (args.length < 3 || !"admin".equalsIgnoreCase(args[0])) {
-            sender.sendMessage("§e用法: /automaillogin admin <reload|previewmail|force2fa|status|logs|unbindmail|resetauth|testsmtp> <player|email>");
+            sender.sendMessage("§e用法: /automaillogin admin <reload|doctor|previewmail|force2fa|status|logs|unbindmail|resetauth|testsmtp> <player|email>");
             return true;
         }
         String subcommand = args[1].toLowerCase();
@@ -116,10 +121,41 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             default -> {
-                sender.sendMessage("§e用法: /automaillogin admin <reload|previewmail|force2fa|status|logs|unbindmail|resetauth|testsmtp> <player|email>");
+                sender.sendMessage("§e用法: /automaillogin admin <reload|doctor|previewmail|force2fa|status|logs|unbindmail|resetauth|testsmtp> <player|email>");
                 return true;
             }
         }
+    }
+
+    private void runDoctor(CommandSender sender) {
+        sender.sendMessage(messageService.get("doctor-title", "§6[AutoMailLogin] §r自检结果："));
+        String databaseType = plugin.getConfig().getString("database.type", "sqlite");
+        sender.sendMessage("§7- 数据库模式: §f" + databaseType);
+
+        String mailMode = plugin.getConfig().getString("mail.mode", "mock");
+        sender.sendMessage("§7- 邮件模式: §f" + mailMode);
+        if ("smtp".equalsIgnoreCase(mailMode)) {
+            String smtpHost = plugin.getConfig().getString("mail.smtp.host", "");
+            int smtpPort = plugin.getConfig().getInt("mail.smtp.port", 0);
+            boolean smtpUserSet = !plugin.getConfig().getString("mail.smtp.username", "").isBlank() && !"change_me".equals(plugin.getConfig().getString("mail.smtp.username", ""));
+            boolean smtpPasswordSet = !plugin.getConfig().getString("mail.smtp.password", "").isBlank() && !"change_me".equals(plugin.getConfig().getString("mail.smtp.password", ""));
+            sender.sendMessage("§7- SMTP 主机: " + (smtpHost.isBlank() ? "§c未配置" : "§a" + smtpHost + ":" + smtpPort));
+            sender.sendMessage("§7- SMTP 账号: " + (smtpUserSet ? "§a已配置" : "§c未配置"));
+            sender.sendMessage("§7- SMTP 密码: " + (smtpPasswordSet ? "§a已配置" : "§c未配置"));
+        }
+
+        File templateDir = plugin.getMailTemplateService().getTemplateDirectory();
+        sender.sendMessage("§7- 模板目录: " + (templateDir.exists() ? "§a" + templateDir.getPath() : "§c缺失: " + templateDir.getPath()));
+        for (MailTemplateType type : MailTemplateType.values()) {
+            boolean subject = plugin.getMailTemplateService().hasTemplate(type, ".subject.txt");
+            boolean text = plugin.getMailTemplateService().hasTemplate(type, ".text.txt");
+            boolean html = plugin.getMailTemplateService().hasTemplate(type, ".html");
+            sender.sendMessage("§7- 模板 " + type.filePrefix() + ": subject=" + flag(subject) + " text=" + flag(text) + " html=" + flag(html));
+        }
+    }
+
+    private String flag(boolean ok) {
+        return ok ? "§aOK" : "§cMISS";
     }
 
     @Override
@@ -128,12 +164,12 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             return List.of("admin", "menu");
         }
         if (args.length == 2 && "admin".equalsIgnoreCase(args[0])) {
-            return List.of("reload", "previewmail", "force2fa", "status", "logs", "unbindmail", "resetauth", "testsmtp");
+            return List.of("reload", "doctor", "previewmail", "force2fa", "status", "logs", "unbindmail", "resetauth", "testsmtp");
         }
         if (args.length == 3 && "admin".equalsIgnoreCase(args[0]) && "previewmail".equalsIgnoreCase(args[1])) {
             return List.of("register", "reset-password", "second-factor", "test-smtp");
         }
-        if (args.length == 3 && "admin".equalsIgnoreCase(args[0]) && !"testsmtp".equalsIgnoreCase(args[1]) && !"reload".equalsIgnoreCase(args[1]) && !"previewmail".equalsIgnoreCase(args[1])) {
+        if (args.length == 3 && "admin".equalsIgnoreCase(args[0]) && !"testsmtp".equalsIgnoreCase(args[1]) && !"reload".equalsIgnoreCase(args[1]) && !"previewmail".equalsIgnoreCase(args[1]) && !"doctor".equalsIgnoreCase(args[1])) {
             List<String> players = new ArrayList<>();
             Bukkit.getOnlinePlayers().forEach(player -> players.add(player.getName()));
             return players;

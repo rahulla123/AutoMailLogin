@@ -84,6 +84,10 @@ public final class AutoMailLoginPlugin extends JavaPlugin {
         mailTemplateService.reload();
     }
 
+    public MailTemplateService getMailTemplateService() {
+        return mailTemplateService;
+    }
+
     private void registerCommand(String name, Object executor) {
         PluginCommand command = getCommand(name);
         if (command != null) {

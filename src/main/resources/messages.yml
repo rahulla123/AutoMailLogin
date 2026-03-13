@@ -23,3 +23,5 @@ previewmail-invalid-type: "模板类型无效，可用值：register、reset-pas
 previewmail-queued: "模板预览邮件正在异步发送，请稍后检查邮箱或服务端日志。"
 previewmail-sent: "模板预览邮件已发送，请检查邮箱或服务端日志。"
 previewmail-failed: "模板预览邮件发送失败，请检查邮箱格式、SMTP 配置或服务端日志。"
+usage-doctor: "用法: /automaillogin admin doctor"
+doctor-title: "§6[AutoMailLogin] §r自检结果："

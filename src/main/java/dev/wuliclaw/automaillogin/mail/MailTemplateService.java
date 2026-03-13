@@ -48,6 +48,14 @@ public final class MailTemplateService {
         return new RenderedMailTemplate(subject, textBody, htmlBody == null || htmlBody.isBlank() ? null : htmlBody);
     }
 
+    public File getTemplateDirectory() {
+        return templateDirectory;
+    }
+
+    public boolean hasTemplate(MailTemplateType type, String suffix) {
+        return new File(templateDirectory, type.filePrefix() + suffix).exists();
+    }
+
     private void refreshTemplateDirectory() {
         this.templateDirectory = new File(plugin.getDataFolder(), plugin.getConfig().getString("mail.template-dir", "templates"));
     }
