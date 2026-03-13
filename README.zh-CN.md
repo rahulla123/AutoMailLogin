@@ -2,91 +2,59 @@
 
 中文 | [English](README.en.md)
 
-`AutoMailLogin` 是一个基于 `Paper` 的邮箱登录认证插件，面向 Minecraft 服务器玩家的邮箱绑定、密码登录、验证码验证、可配置二次验证与基础 GUI 引导场景。
+`AutoMailLogin` 是一个基于 `Paper` 的 Minecraft 邮箱认证插件，目标是把传统的口令登录流程升级成更安全、更适合正式服务器使用的邮箱认证体系。
 
-## 协议
+## 插件优势
 
-本项目使用 `MIT` 协议开源，详见 `LICENSE`。
+- 邮箱注册与验证码确认结合，降低盗号与撞库风险
+- 支持密码登录、密码重置、邮箱二次验证，认证链路更完整
+- 支持 `SQLite / MySQL` 双存储，适配本地测试与正式服务器
+- 内置审计日志，方便管理员排查认证相关问题
+- 提供基础 GUI 菜单，降低玩家首次使用门槛
+- 支持登录失败锁定、验证码发送冷却、二次验证信任期等基础风控能力
 
-## 项目目标
+## 核心功能
 
-- 玩家首次进服先绑定邮箱
-- 支持验证码注册、密码登录、验证码重置密码
-- 支持 `mock` 测试发信与真实 `SMTP` 发信
-- 支持可配置二次验证策略与信任期
-- 默认使用 `SQLite`，同时支持 `MySQL`
-- 提供基础 GUI 菜单，降低命令使用门槛
+- 邮箱注册
+- 邮箱验证码确认
+- 密码设置与密码登录
+- 忘记密码与验证码重置
+- 邮箱二次验证（2FA）
+- 认证前行为限制
+- 审计日志记录
+- 管理员认证状态干预
+- 基础 GUI 认证菜单
 
-## 当前已实现功能
+## 已实现命令
 
-- `/mailregister <email>`：提交邮箱并发送注册验证码
-- `/mailcode <code>`：确认邮箱验证码
-- `/setpassword <password> <confirm>`：设置密码并完成注册
+### 玩家命令
+
+- `/mailregister <email>`：绑定邮箱并发送注册验证码
+- `/mailcode <code>`：确认注册验证码
+- `/setpassword <password> <confirm>`：设置登录密码
 - `/login <password>`：使用密码登录
 - `/mail2fa <code>`：完成邮箱二次验证
 - `/forgotpassword <email>`：发送密码重置验证码
 - `/resetpassword <code> <password> <confirm>`：重置密码
 - `/automaillogin menu`：打开认证 GUI 菜单
-- `/automaillogin admin force2fa <player>`：管理员强制下次登录触发二次验证
-- `/automaillogin admin status <player>`：查看玩家认证状态与风控字段
+
+### 管理员命令
+
+- `/automaillogin admin force2fa <player>`：强制目标玩家下次登录触发二次验证
+- `/automaillogin admin status <player>`：查看玩家认证状态
 - `/automaillogin admin logs <player>`：查看最近审计日志
 - `/automaillogin admin unbindmail <player>`：解绑玩家邮箱
 - `/automaillogin admin resetauth <player>`：重置玩家认证状态
-- 未登录玩家限制：移动、聊天、交互、物品栏、丢弃、拾取、非白名单命令
-- 登录失败次数统计与临时锁定
-- 邮件重发冷却
-- 二次验证信任期
-- `SQLite/MySQL` 双后端与自动表结构补列
 
-## 当前架构
+## 权限节点
 
-- `AutoMailLoginPlugin`：插件入口
-- `command/`：命令处理与 GUI 打开
-- `gui/`：基础认证菜单
-- `listener/`：事件限制与行为拦截
-- `service/`：认证、会话、验证码、邮件、二次验证、审计服务
-- `storage/`：存储抽象、SQLite、MySQL 实现
-- `security/`：密码哈希、二次验证模式
-- `src/main/resources/config.yml`：主配置
-- `src/main/resources/messages.yml`：提示文本
+- `automaillogin.admin`
+  - 默认：`op`
+  - 说明：允许使用全部管理员命令
 
-## 风控与认证增强
+## 适用场景
 
-当前版本已补上：
-
-- 登录失败次数累计
-- 达阈值后的临时锁定
-- 验证码发送冷却
-- 基于配置的二次验证信任期
-- 管理员查看最近审计日志与扩展状态字段
-
-## 构建要求
-
-- Java 21
-- Gradle 8+
-
-常规构建命令：
-
-```bash
-./gradlew build
-```
-
-Windows PowerShell：
-
-```powershell
-.\gradlew.bat build
-```
-
-构建产物默认位于：
-
-```text
-build/libs/
-```
-
-## 建议联调清单
-
-1. 在 `Paper 1.20.6` 服务端加载插件
-2. 用 `mock` 模式走完整注册/登录/重置/2FA 流程
-3. 切换到 `smtp` 模式验证真实发信
-4. 验证 `sqlite` 与 `mysql` 两种存储
-5. 验证管理员命令与 GUI 菜单
+- 需要提升玩家账号安全性的生存服/公益服
+- 希望增加邮箱找回与二次验证能力的正式服务器
+- 需要从本地 `SQLite` 平滑升级到 `MySQL` 的项目
+- 需要基础审计日志与管理员认证控制能力的服务端环境
