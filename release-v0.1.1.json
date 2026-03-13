@@ -1,0 +1,9 @@
+{
+  "tag_name": "v0.1.1",
+  "target_commitish": "main",
+  "name": "v0.1.1",
+  "draft": false,
+  "prerelease": false,
+  "generate_release_notes": false,
+  "body": "AutoMailLogin v0.1.1。\n\n本版本更新：\n- GUI 从说明面板升级为可点击 + 聊天输入交互\n- 重置密码支持两段式 GUI 流程\n- 验证码状态与邮箱验证状态持久化，减少重启丢流程\n- 管理员支持更多离线状态操作\n- 优化菜单与提示消息体验\n- 版本号正式切换为 0.1.1，并验证可在 Paper 1.20.6 上正常加载启用\n"
+}

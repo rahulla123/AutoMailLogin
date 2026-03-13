@@ -33,8 +33,13 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§c你没有权限执行这个命令。");
             return true;
         }
+        if (args.length >= 3 && "admin".equalsIgnoreCase(args[0]) && "testsmtp".equalsIgnoreCase(args[1])) {
+            boolean success = authService.sendTestMail(args[2]);
+            sender.sendMessage(success ? "§a测试邮件发送请求已完成，请检查邮箱或服务端日志。" : "§c测试邮件发送失败，请检查邮箱格式、SMTP 配置或服务端日志。");
+            return true;
+        }
         if (args.length < 3 || !"admin".equalsIgnoreCase(args[0])) {
-            sender.sendMessage("§e用法: /automaillogin admin <force2fa|status|logs|unbindmail|resetauth> <player>");
+            sender.sendMessage("§e用法: /automaillogin admin <force2fa|status|logs|unbindmail|resetauth|testsmtp> <player|email>");
             return true;
         }
         String subcommand = args[1].toLowerCase();
@@ -81,7 +86,7 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             default -> {
-                sender.sendMessage("§e用法: /automaillogin admin <force2fa|status|logs|unbindmail|resetauth> <player>");
+                sender.sendMessage("§e用法: /automaillogin admin <force2fa|status|logs|unbindmail|resetauth|testsmtp> <player|email>");
                 return true;
             }
         }
@@ -93,9 +98,9 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             return List.of("admin", "menu");
         }
         if (args.length == 2 && "admin".equalsIgnoreCase(args[0])) {
-            return List.of("force2fa", "status", "logs", "unbindmail", "resetauth");
+            return List.of("force2fa", "status", "logs", "unbindmail", "resetauth", "testsmtp");
         }
-        if (args.length == 3 && "admin".equalsIgnoreCase(args[0])) {
+        if (args.length == 3 && "admin".equalsIgnoreCase(args[0]) && !"testsmtp".equalsIgnoreCase(args[1])) {
             List<String> players = new ArrayList<>();
             Bukkit.getOnlinePlayers().forEach(player -> players.add(player.getName()));
             return players;

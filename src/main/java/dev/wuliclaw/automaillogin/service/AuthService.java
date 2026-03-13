@@ -45,8 +45,11 @@ public final class AuthService {
         this.auditLogService = auditLogService;
     }
 
-    private String msg(String key, String fallback) {
-        return plugin.getConfig() != null ? fallback : fallback;
+    public boolean sendTestMail(String email) {
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
+            return false;
+        }
+        return mailService.sendTestMail(email);
     }
 
     public void handleJoin(Player player) {

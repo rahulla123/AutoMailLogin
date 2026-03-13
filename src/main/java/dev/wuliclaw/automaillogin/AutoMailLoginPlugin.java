@@ -4,6 +4,7 @@ import dev.wuliclaw.automaillogin.command.AdminCommand;
 import dev.wuliclaw.automaillogin.command.AuthCommand;
 import dev.wuliclaw.automaillogin.command.GuiCommand;
 import dev.wuliclaw.automaillogin.listener.AuthRestrictionListener;
+import dev.wuliclaw.automaillogin.mail.MailTemplateService;
 import dev.wuliclaw.automaillogin.security.PasswordHasher;
 import dev.wuliclaw.automaillogin.service.AuthService;
 import dev.wuliclaw.automaillogin.service.AuditLogService;
@@ -27,6 +28,7 @@ public final class AutoMailLoginPlugin extends JavaPlugin {
     private StorageProvider storageProvider;
     private SecondFactorService secondFactorService;
     private MessageService messageService;
+    private MailTemplateService mailTemplateService;
 
     @Override
     public void onEnable() {
@@ -36,12 +38,14 @@ public final class AutoMailLoginPlugin extends JavaPlugin {
         }
 
         this.messageService = new MessageService(this);
+        this.mailTemplateService = new MailTemplateService(this);
+        this.mailTemplateService.initializeDefaults();
         this.playerSessionService = new PlayerSessionService();
         this.storageProvider = createStorageProvider();
         this.storageProvider.initialize();
         this.verificationService = new VerificationService(this, storageProvider);
         this.secondFactorService = new SecondFactorService(this, verificationService, storageProvider);
-        this.mailService = new MailService(this, verificationService, storageProvider, messageService);
+        this.mailService = new MailService(this, verificationService, storageProvider, messageService, mailTemplateService);
         AuditLogService auditLogService = new AuditLogService((AbstractSqlStorageProvider) this.storageProvider);
         this.authService = new AuthService(this, playerSessionService, verificationService, mailService, storageProvider, new PasswordHasher(), secondFactorService, auditLogService);
 

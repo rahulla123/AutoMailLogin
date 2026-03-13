@@ -1,0 +1,8 @@
+你好，${player}：
+
+你正在 ${server_name} 进行二次验证登录。
+本次验证码为：${code}
+有效期：${expire_seconds} 秒。
+
+如果不是你本人操作，请尽快修改密码。
+${support_email}

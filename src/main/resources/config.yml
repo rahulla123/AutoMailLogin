@@ -12,6 +12,9 @@ mail:
   mode: mock
   from-address: no-reply@example.com
   from-name: AutoMailLogin
+  server-name: AutoMailLogin Server
+  support-email: support@example.com
+  template-dir: templates
   code-length: 6
   code-expire-seconds: 300
   resend-cooldown-seconds: 60

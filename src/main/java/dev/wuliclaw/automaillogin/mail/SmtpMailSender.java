@@ -8,7 +8,9 @@ import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Session;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
@@ -20,7 +22,7 @@ public final class SmtpMailSender {
         this.plugin = plugin;
     }
 
-    public boolean send(String to, String subject, String content) {
+    public boolean send(String to, RenderedMailTemplate template) {
         Properties properties = new Properties();
         properties.put("mail.smtp.host", plugin.getConfig().getString("mail.smtp.host", ""));
         properties.put("mail.smtp.port", String.valueOf(plugin.getConfig().getInt("mail.smtp.port", 587)));
@@ -47,8 +49,23 @@ public final class SmtpMailSender {
                     StandardCharsets.UTF_8.name()
             ));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
-            message.setSubject(subject, StandardCharsets.UTF_8.name());
-            message.setText(content, StandardCharsets.UTF_8.name());
+            message.setSubject(template.subject(), StandardCharsets.UTF_8.name());
+
+            if (template.htmlBody() != null && !template.htmlBody().isBlank()) {
+                MimeBodyPart textPart = new MimeBodyPart();
+                textPart.setText(template.textBody(), StandardCharsets.UTF_8.name());
+
+                MimeBodyPart htmlPart = new MimeBodyPart();
+                htmlPart.setContent(template.htmlBody(), "text/html; charset=UTF-8");
+
+                MimeMultipart multipart = new MimeMultipart("alternative");
+                multipart.addBodyPart(textPart);
+                multipart.addBodyPart(htmlPart);
+                message.setContent(multipart);
+            } else {
+                message.setText(template.textBody(), StandardCharsets.UTF_8.name());
+            }
+
             Transport.send(message);
             return true;
         } catch (MessagingException exception) {
