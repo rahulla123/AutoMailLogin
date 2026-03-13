@@ -31,7 +31,9 @@ public final class AutoMailLoginPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        saveResource("messages.yml", false);
+        if (!new java.io.File(getDataFolder(), "messages.yml").exists()) {
+            saveResource("messages.yml", false);
+        }
 
         this.messageService = new MessageService(this);
         this.playerSessionService = new PlayerSessionService();
