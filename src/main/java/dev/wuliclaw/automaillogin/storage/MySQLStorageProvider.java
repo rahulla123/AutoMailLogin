@@ -31,7 +31,7 @@ public final class MySQLStorageProvider extends AbstractSqlStorageProvider {
     @Override
     protected void initializeSchema(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS aml_players (unique_id VARCHAR(36) PRIMARY KEY, player_name VARCHAR(64) NOT NULL, email VARCHAR(255), password_hash TEXT, last_ip VARCHAR(64), second_factor_verified TINYINT NOT NULL DEFAULT 0, registered_at VARCHAR(64), last_login_at VARCHAR(64), failed_login_attempts INT NOT NULL DEFAULT 0, locked_until VARCHAR(64), trusted_until VARCHAR(64), last_code_sent_at VARCHAR(64), pending_code VARCHAR(32), pending_email VARCHAR(255), pending_purpose VARCHAR(64), pending_expires_at VARCHAR(64), email_verified TINYINT NOT NULL DEFAULT 0)");
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS aml_players (unique_id VARCHAR(36) PRIMARY KEY, player_name VARCHAR(64) NOT NULL, email VARCHAR(255), password_hash TEXT, last_ip VARCHAR(64), second_factor_verified TINYINT NOT NULL DEFAULT 0, registered_at VARCHAR(64), last_login_at VARCHAR(64), failed_login_attempts INT NOT NULL DEFAULT 0, locked_until VARCHAR(64), trusted_until VARCHAR(64), last_code_sent_at VARCHAR(64), pending_code VARCHAR(255), pending_email VARCHAR(255), pending_purpose VARCHAR(64), pending_expires_at VARCHAR(64), pending_failed_attempts INT NOT NULL DEFAULT 0, pending_locked_until VARCHAR(64), email_verified TINYINT NOT NULL DEFAULT 0)");
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS aml_audit_logs (id BIGINT PRIMARY KEY AUTO_INCREMENT, unique_id VARCHAR(36) NOT NULL, player_name VARCHAR(64) NOT NULL, action VARCHAR(64) NOT NULL, detail TEXT, ip_address VARCHAR(64), created_at VARCHAR(64) NOT NULL)");
         }
         applyAlterStatements(connection, List.of(
@@ -45,13 +45,15 @@ public final class MySQLStorageProvider extends AbstractSqlStorageProvider {
                 "ALTER TABLE aml_players ADD COLUMN pending_email VARCHAR(255)",
                 "ALTER TABLE aml_players ADD COLUMN pending_purpose VARCHAR(64)",
                 "ALTER TABLE aml_players ADD COLUMN pending_expires_at VARCHAR(64)",
+                "ALTER TABLE aml_players ADD COLUMN pending_failed_attempts INT NOT NULL DEFAULT 0",
+                "ALTER TABLE aml_players ADD COLUMN pending_locked_until VARCHAR(64)",
                 "ALTER TABLE aml_players ADD COLUMN email_verified TINYINT NOT NULL DEFAULT 0"
         ));
     }
 
     @Override
     protected String upsertPlayerSql() {
-        return "INSERT INTO aml_players(unique_id, player_name, email, password_hash, last_ip, second_factor_verified, registered_at, last_login_at, failed_login_attempts, locked_until, trusted_until, last_code_sent_at, pending_code, pending_email, pending_purpose, pending_expires_at, email_verified) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name = ?, email = ?, password_hash = ?, last_ip = ?, second_factor_verified = ?, registered_at = ?, last_login_at = ?, failed_login_attempts = ?, locked_until = ?, trusted_until = ?, last_code_sent_at = ?, pending_code = ?, pending_email = ?, pending_purpose = ?, pending_expires_at = ?, email_verified = ?";
+        return "INSERT INTO aml_players(unique_id, player_name, email, password_hash, last_ip, second_factor_verified, registered_at, last_login_at, failed_login_attempts, locked_until, trusted_until, last_code_sent_at, pending_code, pending_email, pending_purpose, pending_expires_at, pending_failed_attempts, pending_locked_until, email_verified) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name = ?, email = ?, password_hash = ?, last_ip = ?, second_factor_verified = ?, registered_at = ?, last_login_at = ?, failed_login_attempts = ?, locked_until = ?, trusted_until = ?, last_code_sent_at = ?, pending_code = ?, pending_email = ?, pending_purpose = ?, pending_expires_at = ?, pending_failed_attempts = ?, pending_locked_until = ?, email_verified = ?";
     }
 
     @Override
@@ -71,7 +73,9 @@ public final class MySQLStorageProvider extends AbstractSqlStorageProvider {
         statement.setString(30, account.getPendingEmail());
         statement.setString(31, account.getPendingPurpose());
         statement.setString(32, toText(account.getPendingExpiresAt()));
-        statement.setInt(33, account.isEmailVerified() ? 1 : 0);
+        statement.setInt(33, account.getPendingFailedAttempts());
+        statement.setString(34, toText(account.getPendingLockedUntil()));
+        statement.setInt(35, account.isEmailVerified() ? 1 : 0);
     }
 
     @Override

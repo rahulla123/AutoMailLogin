@@ -18,6 +18,8 @@ mail:
   code-length: 6
   code-expire-seconds: 300
   resend-cooldown-seconds: 60
+  max-verify-attempts: 5
+  verify-lock-seconds: 300
   smtp:
     host: smtp.example.com
     port: 587

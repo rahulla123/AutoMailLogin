@@ -97,6 +97,11 @@ public final class AuthService {
             return;
         }
         auditLogService.log(player, "VERIFY_MAIL_FAILED", "Registration mail verification failed");
+        long lockedSeconds = verificationService.getRemainingVerifyLockSeconds(player.getUniqueId());
+        if (lockedSeconds > 0) {
+            player.sendMessage("§c验证码输入错误次数过多，请在 " + lockedSeconds + " 秒后再试。");
+            return;
+        }
         player.sendMessage("§c验证码错误或已过期。");
     }
 
@@ -154,6 +159,9 @@ public final class AuthService {
         }
         account.setFailedLoginAttempts(0);
         account.setLockedUntil(null);
+        if (passwordHasher.needsRehash(account.getPasswordHash())) {
+            account.setPasswordHash(passwordHasher.hash(password));
+        }
         if (account.getEmail() != null && secondFactorService.shouldRequireSecondFactor(player, account)) {
             storageProvider.save(account);
             secondFactorService.begin(player, account.getEmail(), mailService);
@@ -175,6 +183,11 @@ public final class AuthService {
         boolean success = verificationService.verify(player.getUniqueId(), code, VerificationPurpose.SECOND_FACTOR);
         if (!success) {
             auditLogService.log(player, "VERIFY_2FA_FAILED", "Second factor code invalid or expired");
+            long lockedSeconds = verificationService.getRemainingVerifyLockSeconds(player.getUniqueId());
+            if (lockedSeconds > 0) {
+                player.sendMessage("§c二次验证失败次数过多，请在 " + lockedSeconds + " 秒后再试。");
+                return;
+            }
             player.sendMessage("§c二次验证验证码错误或已过期。");
             return;
         }
@@ -207,6 +220,11 @@ public final class AuthService {
         boolean success = verificationService.verify(player.getUniqueId(), code, VerificationPurpose.RESET_PASSWORD);
         if (!success) {
             auditLogService.log(player, "RESET_PASSWORD_FAILED", "Reset verification code invalid or expired");
+            long lockedSeconds = verificationService.getRemainingVerifyLockSeconds(player.getUniqueId());
+            if (lockedSeconds > 0) {
+                player.sendMessage("§c验证码输入错误次数过多，请在 " + lockedSeconds + " 秒后再试。");
+                return;
+            }
             player.sendMessage("§c验证码错误或已过期。");
             return;
         }

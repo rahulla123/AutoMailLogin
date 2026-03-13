@@ -71,7 +71,9 @@ public abstract class AbstractSqlStorageProvider implements StorageProvider {
             statement.setString(14, account.getPendingEmail());
             statement.setString(15, account.getPendingPurpose());
             statement.setString(16, toText(account.getPendingExpiresAt()));
-            statement.setInt(17, account.isEmailVerified() ? 1 : 0);
+            statement.setInt(17, account.getPendingFailedAttempts());
+            statement.setString(18, toText(account.getPendingLockedUntil()));
+            statement.setInt(19, account.isEmailVerified() ? 1 : 0);
             bindUpsertTail(statement, account);
             statement.executeUpdate();
         } catch (SQLException exception) {
@@ -127,6 +129,8 @@ public abstract class AbstractSqlStorageProvider implements StorageProvider {
         account.setPendingEmail(resultSet.getString("pending_email"));
         account.setPendingPurpose(resultSet.getString("pending_purpose"));
         account.setPendingExpiresAt(fromText(resultSet.getString("pending_expires_at"), null));
+        account.setPendingFailedAttempts(resultSet.getInt("pending_failed_attempts"));
+        account.setPendingLockedUntil(fromText(resultSet.getString("pending_locked_until"), null));
         account.setEmailVerified(resultSet.getInt("email_verified") == 1);
         return account;
     }

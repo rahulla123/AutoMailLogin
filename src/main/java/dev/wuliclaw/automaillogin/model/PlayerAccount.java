@@ -20,6 +20,8 @@ public final class PlayerAccount {
     private String pendingEmail;
     private String pendingPurpose;
     private Instant pendingExpiresAt;
+    private int pendingFailedAttempts;
+    private Instant pendingLockedUntil;
     private boolean emailVerified;
 
     public PlayerAccount(UUID uniqueId, String playerName) {
@@ -58,6 +60,11 @@ public final class PlayerAccount {
     public void setPendingPurpose(String pendingPurpose) { this.pendingPurpose = pendingPurpose; }
     public Instant getPendingExpiresAt() { return pendingExpiresAt; }
     public void setPendingExpiresAt(Instant pendingExpiresAt) { this.pendingExpiresAt = pendingExpiresAt; }
+    public int getPendingFailedAttempts() { return pendingFailedAttempts; }
+    public void setPendingFailedAttempts(int pendingFailedAttempts) { this.pendingFailedAttempts = pendingFailedAttempts; }
+    public Instant getPendingLockedUntil() { return pendingLockedUntil; }
+    public void setPendingLockedUntil(Instant pendingLockedUntil) { this.pendingLockedUntil = pendingLockedUntil; }
+    public boolean isPendingLocked() { return pendingLockedUntil != null && Instant.now().isBefore(pendingLockedUntil); }
     public boolean isEmailVerified() { return emailVerified; }
     public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
     public boolean hasPassword() { return passwordHash != null && !passwordHash.isBlank(); }
@@ -68,5 +75,7 @@ public final class PlayerAccount {
         pendingEmail = null;
         pendingPurpose = null;
         pendingExpiresAt = null;
+        pendingFailedAttempts = 0;
+        pendingLockedUntil = null;
     }
 }
