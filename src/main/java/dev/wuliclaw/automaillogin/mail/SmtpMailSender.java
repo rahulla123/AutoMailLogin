@@ -29,6 +29,11 @@ public final class SmtpMailSender {
         properties.put("mail.smtp.auth", "true");
         properties.put("mail.smtp.ssl.enable", String.valueOf(plugin.getConfig().getBoolean("mail.smtp.ssl", false)));
         properties.put("mail.smtp.starttls.enable", String.valueOf(plugin.getConfig().getBoolean("mail.smtp.starttls", true)));
+        properties.put("mail.smtp.starttls.required", String.valueOf(plugin.getConfig().getBoolean("mail.smtp.require-starttls", true)));
+        properties.put("mail.smtp.connectiontimeout", String.valueOf(plugin.getConfig().getInt("mail.smtp.connection-timeout-ms", 10000)));
+        properties.put("mail.smtp.timeout", String.valueOf(plugin.getConfig().getInt("mail.smtp.timeout-ms", 10000)));
+        properties.put("mail.smtp.writetimeout", String.valueOf(plugin.getConfig().getInt("mail.smtp.write-timeout-ms", 10000)));
+        properties.put("mail.smtp.ssl.checkserveridentity", "true");
 
         String username = plugin.getConfig().getString("mail.smtp.username", "");
         String password = plugin.getConfig().getString("mail.smtp.password", "");
@@ -69,7 +74,7 @@ public final class SmtpMailSender {
             Transport.send(message);
             return true;
         } catch (MessagingException exception) {
-            plugin.getLogger().warning("SMTP send failed: " + exception.getMessage());
+            plugin.getLogger().warning("SMTP send failed: " + exception.getClass().getSimpleName());
             return false;
         } catch (Exception exception) {
             plugin.getLogger().warning("SMTP mail build failed: " + exception.getMessage());

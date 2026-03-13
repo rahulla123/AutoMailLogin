@@ -214,13 +214,19 @@ public final class AuthService {
 
     public void forgotPassword(Player player, String email) {
         PlayerAccount account = storageProvider.findByUniqueId(player.getUniqueId()).orElse(null);
-        if (account == null || account.getEmail() == null || !account.getEmail().equalsIgnoreCase(email)) {
-            auditLogService.log(player, "FORGOT_PASSWORD_FAILED", "Email mismatch during reset request");
-            player.sendMessage("§c邮箱不匹配。");
+        if (account == null || account.getEmail() == null || !account.isEmailVerified() || !account.getEmail().equalsIgnoreCase(email)) {
+            auditLogService.log(player, "FORGOT_PASSWORD_SUBMITTED", "Password reset requested for unknown or unverified account");
+            player.sendMessage(messageServiceOrDefault("forgot-password-submitted", "§e如果邮箱与账号匹配，重置验证码将会发送，请检查邮箱。"));
+            return;
+        }
+        if (!verificationService.canSend(player.getUniqueId())) {
+            auditLogService.log(player, "FORGOT_PASSWORD_THROTTLED", "Password reset request throttled");
+            player.sendMessage(messageServiceOrDefault("forgot-password-throttled", "§c请求过于频繁，请稍后再试。"));
             return;
         }
         auditLogService.log(player, "FORGOT_PASSWORD_REQUEST", "Password reset code requested");
         mailService.sendResetPasswordCode(player, email);
+        player.sendMessage(messageServiceOrDefault("forgot-password-submitted", "§e如果邮箱与账号匹配，重置验证码将会发送，请检查邮箱。"));
     }
 
     public void resetPassword(Player player, String code, String password, String confirm) {
@@ -244,6 +250,11 @@ public final class AuthService {
         if (account == null) {
             auditLogService.log(player, "RESET_PASSWORD_FAILED", "Account not found");
             player.sendMessage("§c账号不存在。");
+            return;
+        }
+        if (!account.isEmailVerified()) {
+            auditLogService.log(player, "RESET_PASSWORD_FAILED", "Account email not verified");
+            player.sendMessage(messageServiceOrDefault("reset-password-mail-not-verified", "§c该账号尚未完成邮箱验证，无法通过邮件重置密码。"));
             return;
         }
         account.setPasswordHash(passwordHasher.hash(password));

@@ -139,9 +139,14 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             int smtpPort = plugin.getConfig().getInt("mail.smtp.port", 0);
             boolean smtpUserSet = !plugin.getConfig().getString("mail.smtp.username", "").isBlank() && !"change_me".equals(plugin.getConfig().getString("mail.smtp.username", ""));
             boolean smtpPasswordSet = !plugin.getConfig().getString("mail.smtp.password", "").isBlank() && !"change_me".equals(plugin.getConfig().getString("mail.smtp.password", ""));
+            boolean starttls = plugin.getConfig().getBoolean("mail.smtp.starttls", true);
+            boolean requireStarttls = plugin.getConfig().getBoolean("mail.smtp.require-starttls", true);
+            int timeoutMs = plugin.getConfig().getInt("mail.smtp.timeout-ms", 10000);
             sender.sendMessage("§7- SMTP 主机: " + (smtpHost.isBlank() ? "§c未配置" : "§a" + smtpHost + ":" + smtpPort));
             sender.sendMessage("§7- SMTP 账号: " + (smtpUserSet ? "§a已配置" : "§c未配置"));
             sender.sendMessage("§7- SMTP 密码: " + (smtpPasswordSet ? "§a已配置" : "§c未配置"));
+            sender.sendMessage("§7- STARTTLS: " + (starttls ? "§a开启" : "§c关闭") + " / required=" + (requireStarttls ? "§a是" : "§e否"));
+            sender.sendMessage("§7- SMTP 超时: §f" + timeoutMs + "ms");
         }
 
         File templateDir = plugin.getMailTemplateService().getTemplateDirectory();
