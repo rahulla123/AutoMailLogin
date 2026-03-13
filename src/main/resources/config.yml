@@ -22,7 +22,13 @@ mail:
   resend-cooldown-reset-seconds: 120
   resend-cooldown-second-factor-seconds: 60
   max-verify-attempts: 5
+  max-verify-attempts-register: 5
+  max-verify-attempts-reset: 4
+  max-verify-attempts-second-factor: 5
   verify-lock-seconds: 300
+  verify-lock-register-seconds: 300
+  verify-lock-reset-seconds: 600
+  verify-lock-second-factor-seconds: 300
   mock-log-sensitive-content: false
   allowed-domains: []
   blocked-domains: []

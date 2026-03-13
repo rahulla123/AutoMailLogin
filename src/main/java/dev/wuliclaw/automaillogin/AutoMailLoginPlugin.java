@@ -88,6 +88,10 @@ public final class AutoMailLoginPlugin extends JavaPlugin {
         return mailTemplateService;
     }
 
+    public StorageProvider getStorageProvider() {
+        return storageProvider;
+    }
+
     private void registerCommand(String name, Object executor) {
         PluginCommand command = getCommand(name);
         if (command != null) {

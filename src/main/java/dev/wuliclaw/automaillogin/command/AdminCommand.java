@@ -131,6 +131,7 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(messageService.get("doctor-title", "§6[AutoMailLogin] §r自检结果："));
         String databaseType = plugin.getConfig().getString("database.type", "sqlite");
         sender.sendMessage("§7- 数据库模式: §f" + databaseType);
+        sender.sendMessage("§7- 数据库连通性: " + (plugin.getStorageProvider().testConnection() ? "§aOK" : "§cFAILED"));
 
         String mailMode = plugin.getConfig().getString("mail.mode", "mock");
         sender.sendMessage("§7- 邮件模式: §f" + mailMode);

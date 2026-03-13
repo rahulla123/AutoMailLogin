@@ -10,4 +10,5 @@ public interface StorageProvider {
     Optional<PlayerAccount> findByUniqueId(UUID uniqueId);
     Optional<PlayerAccount> findByPlayerName(String playerName);
     void save(PlayerAccount account);
+    boolean testConnection();
 }

@@ -88,8 +88,8 @@ public final class VerificationService {
             return true;
         }
 
-        int maxAttempts = plugin.getConfig().getInt("mail.max-verify-attempts", 5);
-        int lockSeconds = plugin.getConfig().getInt("mail.verify-lock-seconds", 300);
+        int maxAttempts = getMaxAttempts(purpose);
+        int lockSeconds = getLockSeconds(purpose);
         account.setPendingFailedAttempts(account.getPendingFailedAttempts() + 1);
         if (maxAttempts > 0 && account.getPendingFailedAttempts() >= maxAttempts) {
             account.setPendingFailedAttempts(0);
@@ -125,6 +125,22 @@ public final class VerificationService {
             case REGISTER -> plugin.getConfig().getInt("mail.resend-cooldown-register-seconds", plugin.getConfig().getInt("mail.resend-cooldown-seconds", 60));
             case RESET_PASSWORD -> plugin.getConfig().getInt("mail.resend-cooldown-reset-seconds", plugin.getConfig().getInt("mail.resend-cooldown-seconds", 60));
             case SECOND_FACTOR -> plugin.getConfig().getInt("mail.resend-cooldown-second-factor-seconds", plugin.getConfig().getInt("mail.resend-cooldown-seconds", 60));
+        };
+    }
+
+    private int getMaxAttempts(VerificationPurpose purpose) {
+        return switch (purpose) {
+            case REGISTER -> plugin.getConfig().getInt("mail.max-verify-attempts-register", plugin.getConfig().getInt("mail.max-verify-attempts", 5));
+            case RESET_PASSWORD -> plugin.getConfig().getInt("mail.max-verify-attempts-reset", plugin.getConfig().getInt("mail.max-verify-attempts", 5));
+            case SECOND_FACTOR -> plugin.getConfig().getInt("mail.max-verify-attempts-second-factor", plugin.getConfig().getInt("mail.max-verify-attempts", 5));
+        };
+    }
+
+    private int getLockSeconds(VerificationPurpose purpose) {
+        return switch (purpose) {
+            case REGISTER -> plugin.getConfig().getInt("mail.verify-lock-register-seconds", plugin.getConfig().getInt("mail.verify-lock-seconds", 300));
+            case RESET_PASSWORD -> plugin.getConfig().getInt("mail.verify-lock-reset-seconds", plugin.getConfig().getInt("mail.verify-lock-seconds", 300));
+            case SECOND_FACTOR -> plugin.getConfig().getInt("mail.verify-lock-second-factor-seconds", plugin.getConfig().getInt("mail.verify-lock-seconds", 300));
         };
     }
 

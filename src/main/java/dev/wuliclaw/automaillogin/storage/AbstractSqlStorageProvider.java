@@ -52,6 +52,16 @@ public abstract class AbstractSqlStorageProvider implements StorageProvider {
     }
 
     @Override
+    public boolean testConnection() {
+        try (Connection ignored = getConnection()) {
+            return true;
+        } catch (SQLException exception) {
+            onError("Failed to test SQL connection", exception);
+            return false;
+        }
+    }
+
+    @Override
     public void save(PlayerAccount account) {
         String sql = upsertPlayerSql();
         try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
