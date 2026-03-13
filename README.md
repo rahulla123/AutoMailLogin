@@ -1,158 +1,32 @@
 # AutoMailLogin
 
-中文 | [English](#english)
+中文 | [English](README.en.md)
 
-## 中文
+这是默认中文入口文档。完整中文说明请见：[`README.zh-CN.md`](README.zh-CN.md)
 
-`AutoMailLogin` 是一个基于 `Paper` 的邮箱登录认证插件，面向 Minecraft 服务器玩家的邮箱绑定、密码登录、验证码验证、可配置二次验证与基础 GUI 引导场景。
+## 快速说明
 
-### 协议
+`AutoMailLogin` 是一个基于 `Paper` 的 Minecraft 邮箱认证插件，支持：
 
-本项目使用 `MIT` 协议开源，详见 `LICENSE`。
+- 邮箱注册与验证码验证
+- 密码登录与密码重置
+- 邮箱二次验证（2FA）
+- `SQLite / MySQL` 双存储
+- 基础认证 GUI
+- 管理员状态查询与审计日志
 
-### 项目目标
+## 文档入口
 
-- 玩家首次进服先绑定邮箱
-- 支持验证码注册、密码登录、验证码重置密码
-- 支持 `mock` 测试发信与真实 `SMTP` 发信
-- 支持可配置二次验证策略与信任期
-- 默认使用 `SQLite`，同时支持 `MySQL`
-- 提供基础 GUI 菜单，降低命令使用门槛
+- 中文文档：[`README.zh-CN.md`](README.zh-CN.md)
+- English documentation: [`README.en.md`](README.en.md)
 
-### 当前已实现功能
-
-- `/mailregister <email>`：提交邮箱并发送注册验证码
-- `/mailcode <code>`：确认邮箱验证码
-- `/setpassword <password> <confirm>`：设置密码并完成注册
-- `/login <password>`：使用密码登录
-- `/mail2fa <code>`：完成邮箱二次验证
-- `/forgotpassword <email>`：发送密码重置验证码
-- `/resetpassword <code> <password> <confirm>`：重置密码
-- `/automaillogin menu`：打开认证 GUI 菜单
-- `/automaillogin admin force2fa <player>`：管理员强制下次登录触发二次验证
-- `/automaillogin admin status <player>`：查看玩家认证状态与风控字段
-- `/automaillogin admin logs <player>`：查看最近审计日志
-- `/automaillogin admin unbindmail <player>`：解绑玩家邮箱
-- `/automaillogin admin resetauth <player>`：重置玩家认证状态
-- 未登录玩家限制：移动、聊天、交互、物品栏、丢弃、拾取、非白名单命令
-- 登录失败次数统计与临时锁定
-- 邮件重发冷却
-- 二次验证信任期
-- SQLite/MySQL 双后端与自动表结构补列
-
-### 当前架构
-
-- `AutoMailLoginPlugin`：插件入口
-- `command/`：命令处理与 GUI 打开
-- `gui/`：基础认证菜单
-- `listener/`：事件限制与行为拦截
-- `service/`：认证、会话、验证码、邮件、二次验证、审计服务
-- `storage/`：存储抽象、SQLite、MySQL 实现
-- `security/`：密码哈希、二次验证模式
-- `src/main/resources/config.yml`：主配置
-- `src/main/resources/messages.yml`：提示文本
-
-### 风控与认证增强
-
-当前版本已补上：
-
-- 登录失败次数累计
-- 达阈值后的临时锁定
-- 验证码发送冷却
-- 基于配置的二次验证信任期
-- 管理员查看最近审计日志与扩展状态字段
-
-### 构建要求
-
-- Java 21
-- Gradle 8+
-
-常规构建命令：
-
-```bash
-./gradlew build
-```
-
-Windows PowerShell：
+## 构建
 
 ```powershell
 .\gradlew.bat build
 ```
 
 构建产物默认位于：
-
-```text
-build/libs/
-```
-
-### 建议联调清单
-
-1. 在 `Paper 1.20.6` 服务端加载插件
-2. 用 `mock` 模式走完整注册/登录/重置/2FA 流程
-3. 切换到 `smtp` 模式验证真实发信
-4. 验证 `sqlite` 与 `mysql` 两种存储
-5. 验证管理员命令与 GUI 菜单
-
----
-
-## English
-
-`AutoMailLogin` is a `Paper` plugin for Minecraft servers that provides mail-based registration, password login, verification codes, configurable second-factor authentication, and a basic GUI helper menu.
-
-### License
-
-This project is released under the `MIT` License. See `LICENSE` for details.
-
-### Goals
-
-- Require players to bind an email on first join
-- Support registration, password login, and password reset with verification codes
-- Support both `mock` mail delivery and real `SMTP` delivery
-- Support configurable mail-based second-factor verification rules and trusted windows
-- Use `SQLite` by default while supporting `MySQL`
-- Provide a basic GUI entry for players who prefer not to start from raw commands
-
-### Implemented Features
-
-- `/mailregister <email>`: bind email and send registration code
-- `/mailcode <code>`: verify the registration code
-- `/setpassword <password> <confirm>`: set password and complete registration
-- `/login <password>`: login with password
-- `/mail2fa <code>`: complete second-factor verification
-- `/forgotpassword <email>`: request password reset code
-- `/resetpassword <code> <password> <confirm>`: reset password
-- `/automaillogin menu`: open the auth GUI menu
-- `/automaillogin admin force2fa <player>`: force next login to require second factor
-- `/automaillogin admin status <player>`: inspect player auth and risk state
-- `/automaillogin admin logs <player>`: inspect recent audit logs
-- `/automaillogin admin unbindmail <player>`: unbind the player's email
-- `/automaillogin admin resetauth <player>`: reset the player's auth state
-- Restrict unauthenticated players from movement, chat, interaction, inventory usage, item dropping, item pickup, and non-whitelisted commands
-- Login failure counting and temporary lockout
-- Mail resend cooldown
-- Second-factor trusted window
-- SQLite/MySQL dual backend with lightweight schema migration
-
-### Build
-
-Requirements:
-
-- Java 21
-- Gradle 8+
-
-Typical build command:
-
-```bash
-./gradlew build
-```
-
-On Windows PowerShell:
-
-```powershell
-.\gradlew.bat build
-```
-
-Build artifacts are generated in:
 
 ```text
 build/libs/
