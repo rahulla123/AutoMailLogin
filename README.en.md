@@ -2,7 +2,18 @@
 
 [中文](README.md) | English
 
-> 🔐 A mail-based authentication plugin for `Paper` servers. It upgrades the traditional password-only login flow into a more complete and secure experience with email verification, password reset, mail-based 2FA, admin audit tools, and editable mail templates.
+> 🔐 A mail-based authentication plugin built specifically for **Minecraft `Paper` servers**. It upgrades the traditional password-only login flow into a more complete and secure experience with email verification, password reset, mail-based 2FA, admin audit tools, and editable mail templates.
+
+## 🧭 What is this?
+
+`AutoMailLogin` is a plugin for **player authentication on Minecraft servers**, designed to run on `Paper`.
+
+It is not a generic login library or a standalone mail utility. It is built for real Minecraft server scenarios such as:
+
+- binding player accounts to email addresses
+- recovering forgotten passwords safely
+- adding second-factor checks on risky logins
+- giving server admins visibility into authentication state and audit logs
 
 ## ✨ What does it solve?
 
