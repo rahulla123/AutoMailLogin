@@ -18,6 +18,9 @@ mail:
   code-length: 6
   code-expire-seconds: 300
   resend-cooldown-seconds: 60
+  resend-cooldown-register-seconds: 60
+  resend-cooldown-reset-seconds: 120
+  resend-cooldown-second-factor-seconds: 60
   max-verify-attempts: 5
   verify-lock-seconds: 300
   mock-log-sensitive-content: false

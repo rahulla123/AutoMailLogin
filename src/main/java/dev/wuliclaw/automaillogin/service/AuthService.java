@@ -219,7 +219,7 @@ public final class AuthService {
             player.sendMessage(messageServiceOrDefault("forgot-password-submitted", "§e如果邮箱与账号匹配，重置验证码将会发送，请检查邮箱。"));
             return;
         }
-        if (!verificationService.canSend(player.getUniqueId())) {
+        if (!verificationService.canSend(player.getUniqueId(), VerificationPurpose.RESET_PASSWORD)) {
             auditLogService.log(player, "FORGOT_PASSWORD_THROTTLED", "Password reset request throttled");
             player.sendMessage(messageServiceOrDefault("forgot-password-throttled", "§c请求过于频繁，请稍后再试。"));
             return;

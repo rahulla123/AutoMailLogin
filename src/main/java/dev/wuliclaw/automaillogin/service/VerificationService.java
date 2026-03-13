@@ -42,8 +42,8 @@ public final class VerificationService {
         return verification;
     }
 
-    public boolean canSend(UUID uniqueId) {
-        int cooldown = plugin.getConfig().getInt("mail.resend-cooldown-seconds", 60);
+    public boolean canSend(UUID uniqueId, VerificationPurpose purpose) {
+        int cooldown = getCooldownSeconds(purpose);
         if (cooldown <= 0) {
             return true;
         }
@@ -54,8 +54,8 @@ public final class VerificationService {
         return Duration.between(account.getLastCodeSentAt(), Instant.now()).getSeconds() >= cooldown;
     }
 
-    public long getRemainingCooldownSeconds(UUID uniqueId) {
-        int cooldown = plugin.getConfig().getInt("mail.resend-cooldown-seconds", 60);
+    public long getRemainingCooldownSeconds(UUID uniqueId, VerificationPurpose purpose) {
+        int cooldown = getCooldownSeconds(purpose);
         PlayerAccount account = storageProvider.findByUniqueId(uniqueId).orElse(null);
         if (account == null || account.getLastCodeSentAt() == null) {
             return 0;
@@ -118,6 +118,14 @@ public final class VerificationService {
         }
         long remaining = Duration.between(Instant.now(), account.getPendingLockedUntil()).getSeconds();
         return Math.max(0, remaining);
+    }
+
+    private int getCooldownSeconds(VerificationPurpose purpose) {
+        return switch (purpose) {
+            case REGISTER -> plugin.getConfig().getInt("mail.resend-cooldown-register-seconds", plugin.getConfig().getInt("mail.resend-cooldown-seconds", 60));
+            case RESET_PASSWORD -> plugin.getConfig().getInt("mail.resend-cooldown-reset-seconds", plugin.getConfig().getInt("mail.resend-cooldown-seconds", 60));
+            case SECOND_FACTOR -> plugin.getConfig().getInt("mail.resend-cooldown-second-factor-seconds", plugin.getConfig().getInt("mail.resend-cooldown-seconds", 60));
+        };
     }
 
     private String generateCode(int length) {

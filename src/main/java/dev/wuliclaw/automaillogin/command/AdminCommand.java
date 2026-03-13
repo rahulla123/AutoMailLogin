@@ -147,6 +147,8 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§7- SMTP 密码: " + (smtpPasswordSet ? "§a已配置" : "§c未配置"));
             sender.sendMessage("§7- STARTTLS: " + (starttls ? "§a开启" : "§c关闭") + " / required=" + (requireStarttls ? "§a是" : "§e否"));
             sender.sendMessage("§7- SMTP 超时: §f" + timeoutMs + "ms");
+            boolean connectOk = new dev.wuliclaw.automaillogin.mail.SmtpMailSender(plugin).testConnection();
+            sender.sendMessage(connectOk ? "§7- SMTP 连通性: §aOK" : "§7- SMTP 连通性: §cFAILED");
         }
 
         File templateDir = plugin.getMailTemplateService().getTemplateDirectory();

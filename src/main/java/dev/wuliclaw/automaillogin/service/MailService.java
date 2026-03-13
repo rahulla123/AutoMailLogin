@@ -67,8 +67,8 @@ public final class MailService {
         if (account == null && createIfMissing) {
             account = new PlayerAccount(player.getUniqueId(), player.getName());
         }
-        if (account != null && !verificationService.canSend(player.getUniqueId())) {
-            long remaining = verificationService.getRemainingCooldownSeconds(player.getUniqueId());
+        if (account != null && !verificationService.canSend(player.getUniqueId(), purpose)) {
+            long remaining = verificationService.getRemainingCooldownSeconds(player.getUniqueId(), purpose);
             player.sendMessage("§c发送过于频繁，请在 " + remaining + " 秒后再试。");
             return;
         }
