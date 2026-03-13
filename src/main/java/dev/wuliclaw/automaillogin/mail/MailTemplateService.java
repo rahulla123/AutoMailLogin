@@ -10,11 +10,16 @@ import java.util.Map;
 
 public final class MailTemplateService {
     private final AutoMailLoginPlugin plugin;
-    private final File templateDirectory;
+    private File templateDirectory;
 
     public MailTemplateService(AutoMailLoginPlugin plugin) {
         this.plugin = plugin;
-        this.templateDirectory = new File(plugin.getDataFolder(), plugin.getConfig().getString("mail.template-dir", "templates"));
+        refreshTemplateDirectory();
+    }
+
+    public void reload() {
+        refreshTemplateDirectory();
+        initializeDefaults();
     }
 
     public void initializeDefaults() {
@@ -41,6 +46,10 @@ public final class MailTemplateService {
         String textBody = replaceVariables(readTemplate(prefix + ".text.txt"), variables);
         String htmlBody = replaceVariables(readTemplate(prefix + ".html"), variables);
         return new RenderedMailTemplate(subject, textBody, htmlBody == null || htmlBody.isBlank() ? null : htmlBody);
+    }
+
+    private void refreshTemplateDirectory() {
+        this.templateDirectory = new File(plugin.getDataFolder(), plugin.getConfig().getString("mail.template-dir", "templates"));
     }
 
     private String readTemplate(String fileName) {

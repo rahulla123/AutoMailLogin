@@ -7,9 +7,15 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 
 public final class MessageService {
-    private final FileConfiguration messages;
+    private final AutoMailLoginPlugin plugin;
+    private FileConfiguration messages;
 
     public MessageService(AutoMailLoginPlugin plugin) {
+        this.plugin = plugin;
+        reload();
+    }
+
+    public void reload() {
         File file = new File(plugin.getDataFolder(), "messages.yml");
         this.messages = YamlConfiguration.loadConfiguration(file);
     }

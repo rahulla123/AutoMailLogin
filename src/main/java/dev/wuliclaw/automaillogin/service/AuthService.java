@@ -345,11 +345,11 @@ public final class AuthService {
             onlineAuthenticated = sessionService.isAuthenticated(online.getUniqueId());
         }
         return "§6[AutoMailLogin] §r玩家=" + account.getPlayerName()
-                + " | email=" + account.getEmail()
+                + " | email=" + maskEmail(account.getEmail())
                 + " | emailVerified=" + account.isEmailVerified()
                 + " | registeredAt=" + account.getRegisteredAt()
                 + " | lastLoginAt=" + account.getLastLoginAt()
-                + " | lastIp=" + account.getLastIp()
+                + " | lastIp=" + maskIp(account.getLastIp())
                 + " | failedAttempts=" + account.getFailedLoginAttempts()
                 + " | lockedUntil=" + account.getLockedUntil()
                 + " | trustedUntil=" + account.getTrustedUntil()
@@ -373,6 +373,15 @@ public final class AuthService {
         return auditLogService.getRecent(account.getUniqueId(), limit);
     }
 
+    public String maskAuditDetail(String detail) {
+        if (detail == null || detail.isBlank()) {
+            return "-";
+        }
+        String masked = detail.replaceAll("([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})", "$1***@$2");
+        masked = masked.replaceAll("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b", "***.***.***.***");
+        return masked;
+    }
+
     private void completeLogin(Player player, PlayerAccount account) {
         account.setLastIp(player.getAddress() == null ? null : player.getAddress().getAddress().getHostAddress());
         account.setSecondFactorVerified(true);
@@ -386,5 +395,27 @@ public final class AuthService {
     private PlayerAccount loadOrCreate(Player player) {
         return storageProvider.findByUniqueId(player.getUniqueId())
                 .orElseGet(() -> new PlayerAccount(player.getUniqueId(), player.getName()));
+    }
+
+    private String maskEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return "-";
+        }
+        int atIndex = email.indexOf('@');
+        if (atIndex <= 1) {
+            return "***" + email.substring(Math.max(atIndex, 0));
+        }
+        return email.substring(0, 1) + "***" + email.substring(atIndex);
+    }
+
+    private String maskIp(String ip) {
+        if (ip == null || ip.isBlank()) {
+            return "-";
+        }
+        String[] parts = ip.split("\\.");
+        if (parts.length != 4) {
+            return "***";
+        }
+        return parts[0] + ".***.***." + parts[3];
     }
 }

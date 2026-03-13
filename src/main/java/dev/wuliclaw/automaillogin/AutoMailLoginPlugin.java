@@ -51,7 +51,7 @@ public final class AutoMailLoginPlugin extends JavaPlugin {
 
         AuthCommand authCommand = new AuthCommand(authService, messageService);
         GuiCommand guiCommand = new GuiCommand(authService, messageService);
-        AdminCommand adminCommand = new AdminCommand(authService, guiCommand, messageService);
+        AdminCommand adminCommand = new AdminCommand(this, authService, guiCommand, messageService);
         registerCommand("mailregister", authCommand);
         registerCommand("mailcode", authCommand);
         registerCommand("setpassword", authCommand);
@@ -73,6 +73,15 @@ public final class AutoMailLoginPlugin extends JavaPlugin {
             return new MySQLStorageProvider(this);
         }
         return new SQLiteStorageProvider(this);
+    }
+
+    public void reloadRuntime() {
+        reloadConfig();
+        if (!new java.io.File(getDataFolder(), "messages.yml").exists()) {
+            saveResource("messages.yml", false);
+        }
+        messageService.reload();
+        mailTemplateService.reload();
     }
 
     private void registerCommand(String name, Object executor) {

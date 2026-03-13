@@ -20,6 +20,7 @@ mail:
   resend-cooldown-seconds: 60
   max-verify-attempts: 5
   verify-lock-seconds: 300
+  mock-log-sensitive-content: false
   smtp:
     host: smtp.example.com
     port: 587

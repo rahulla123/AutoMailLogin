@@ -47,11 +47,7 @@ public final class MailService {
         RenderedMailTemplate template = templateService.render(MailTemplateType.TEST_SMTP, baseVariables(null, email, null));
         String mode = plugin.getConfig().getString("mail.mode", "mock");
         if (!"smtp".equalsIgnoreCase(mode)) {
-            plugin.getLogger().info("[MOCK MAIL][SUBJECT] " + template.subject());
-            plugin.getLogger().info("[MOCK MAIL][TEXT] " + template.textBody());
-            if (template.htmlBody() != null) {
-                plugin.getLogger().info("[MOCK MAIL][HTML] " + template.htmlBody());
-            }
+            logMockMail(template, null, email);
             return true;
         }
         return smtpMailSender.send(email, template);
@@ -88,12 +84,40 @@ public final class MailService {
             }
             return;
         }
-        plugin.getLogger().info("[MOCK MAIL][SUBJECT] " + template.subject());
-        plugin.getLogger().info("[MOCK MAIL][TEXT] " + template.textBody());
-        if (template.htmlBody() != null) {
-            plugin.getLogger().info("[MOCK MAIL][HTML] " + template.htmlBody());
-        }
+        logMockMail(template, player == null ? null : player.getName(), email);
         player.sendMessage(mockMessage);
+    }
+
+    private void logMockMail(RenderedMailTemplate template, String playerName, String email) {
+        boolean logSensitive = plugin.getConfig().getBoolean("mail.mock-log-sensitive-content", false);
+        plugin.getLogger().info("[MOCK MAIL][SUBJECT] " + (logSensitive ? template.subject() : sanitizeForMock(template.subject())));
+        plugin.getLogger().info("[MOCK MAIL][TEXT] " + (logSensitive ? template.textBody() : sanitizeForMock(template.textBody())));
+        if (template.htmlBody() != null) {
+            plugin.getLogger().info("[MOCK MAIL][HTML] " + (logSensitive ? template.htmlBody() : sanitizeForMock(template.htmlBody())));
+        }
+        if (playerName != null || email != null) {
+            plugin.getLogger().info("[MOCK MAIL][META] player=" + (playerName == null ? "-" : playerName) + ", email=" + (logSensitive ? email : maskEmail(email)));
+        }
+    }
+
+    private String sanitizeForMock(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        String sanitized = value.replaceAll("\\b\\d{6,8}\\b", "******");
+        sanitized = sanitized.replaceAll("([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})", "$1***@$2");
+        return sanitized;
+    }
+
+    private String maskEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return "-";
+        }
+        int atIndex = email.indexOf('@');
+        if (atIndex <= 1) {
+            return "***" + email.substring(Math.max(atIndex, 0));
+        }
+        return email.substring(0, 1) + "***" + email.substring(atIndex);
     }
 
     private Map<String, String> baseVariables(Player player, String email, PendingVerification verification) {
