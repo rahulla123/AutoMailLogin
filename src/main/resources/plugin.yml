@@ -1,7 +1,7 @@
 name: AutoMailLogin
 version: ${version}
 main: dev.wuliclaw.automaillogin.AutoMailLoginPlugin
-api-version: '1.20'
+api-version: '1.21'
 authors: [WuLiClaw]
 description: 为 Minecraft Paper 服务器打造的邮箱认证与二次验证插件。
 website: https://github.com/

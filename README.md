@@ -6,7 +6,7 @@
 
 ## 🧭 这是什么？
 
-`AutoMailLogin` 是一个用于 **Minecraft 服务器玩家认证** 的插件，运行在 `Paper` 服务端上。
+`AutoMailLogin` 是一个用于 **Minecraft 服务器玩家认证** 的插件，运行在 `Paper` 服务端上，当前面向 **Minecraft `1.21+`** 版本维护。
 
 它不是普通的网站登录模块，也不是通用邮件工具，而是专门给服主解决下面这些问题：
 

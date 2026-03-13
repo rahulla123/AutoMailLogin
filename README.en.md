@@ -6,7 +6,7 @@
 
 ## 🧭 What is this?
 
-`AutoMailLogin` is a plugin for **player authentication on Minecraft servers**, designed to run on `Paper`.
+`AutoMailLogin` is a plugin for **player authentication on Minecraft servers**, designed to run on `Paper`, and is now maintained for **Minecraft `1.21+`**.
 
 It is not a generic login library or a standalone mail utility. It is built for real Minecraft server scenarios such as:
 
