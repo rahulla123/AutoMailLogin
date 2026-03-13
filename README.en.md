@@ -1,6 +1,6 @@
 # AutoMailLogin
 
-[中文](README.zh-CN.md) | English
+[中文](README.md) | English
 
 > 🔐 A mail-based authentication plugin for `Paper` servers. It upgrades the traditional password-only login flow into a more complete and secure experience with email verification, password reset, mail-based 2FA, admin audit tools, and editable mail templates.
 
