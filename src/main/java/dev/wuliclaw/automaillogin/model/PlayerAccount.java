@@ -16,6 +16,11 @@ public final class PlayerAccount {
     private Instant lockedUntil;
     private Instant trustedUntil;
     private Instant lastCodeSentAt;
+    private String pendingCode;
+    private String pendingEmail;
+    private String pendingPurpose;
+    private Instant pendingExpiresAt;
+    private boolean emailVerified;
 
     public PlayerAccount(UUID uniqueId, String playerName) {
         this.uniqueId = uniqueId;
@@ -45,7 +50,23 @@ public final class PlayerAccount {
     public void setTrustedUntil(Instant trustedUntil) { this.trustedUntil = trustedUntil; }
     public Instant getLastCodeSentAt() { return lastCodeSentAt; }
     public void setLastCodeSentAt(Instant lastCodeSentAt) { this.lastCodeSentAt = lastCodeSentAt; }
+    public String getPendingCode() { return pendingCode; }
+    public void setPendingCode(String pendingCode) { this.pendingCode = pendingCode; }
+    public String getPendingEmail() { return pendingEmail; }
+    public void setPendingEmail(String pendingEmail) { this.pendingEmail = pendingEmail; }
+    public String getPendingPurpose() { return pendingPurpose; }
+    public void setPendingPurpose(String pendingPurpose) { this.pendingPurpose = pendingPurpose; }
+    public Instant getPendingExpiresAt() { return pendingExpiresAt; }
+    public void setPendingExpiresAt(Instant pendingExpiresAt) { this.pendingExpiresAt = pendingExpiresAt; }
+    public boolean isEmailVerified() { return emailVerified; }
+    public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
     public boolean hasPassword() { return passwordHash != null && !passwordHash.isBlank(); }
     public boolean isLocked() { return lockedUntil != null && Instant.now().isBefore(lockedUntil); }
     public boolean isTrusted() { return trustedUntil != null && Instant.now().isBefore(trustedUntil); }
+    public void clearPendingVerification() {
+        pendingCode = null;
+        pendingEmail = null;
+        pendingPurpose = null;
+        pendingExpiresAt = null;
+    }
 }

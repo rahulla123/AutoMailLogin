@@ -33,7 +33,7 @@ public abstract class AbstractSqlStorageProvider implements StorageProvider {
 
     @Override
     public Optional<PlayerAccount> findByPlayerName(String playerName) {
-        return findOne("SELECT * FROM aml_players WHERE LOWER(player_name) = LOWER(?) ORDER BY rowid DESC", playerName);
+        return findOne("SELECT * FROM aml_players WHERE LOWER(player_name) = LOWER(?)", playerName);
     }
 
     private Optional<PlayerAccount> findOne(String sql, String value) {
@@ -67,6 +67,11 @@ public abstract class AbstractSqlStorageProvider implements StorageProvider {
             statement.setString(10, toText(account.getLockedUntil()));
             statement.setString(11, toText(account.getTrustedUntil()));
             statement.setString(12, toText(account.getLastCodeSentAt()));
+            statement.setString(13, account.getPendingCode());
+            statement.setString(14, account.getPendingEmail());
+            statement.setString(15, account.getPendingPurpose());
+            statement.setString(16, toText(account.getPendingExpiresAt()));
+            statement.setInt(17, account.isEmailVerified() ? 1 : 0);
             bindUpsertTail(statement, account);
             statement.executeUpdate();
         } catch (SQLException exception) {
@@ -118,6 +123,11 @@ public abstract class AbstractSqlStorageProvider implements StorageProvider {
         account.setLockedUntil(fromText(resultSet.getString("locked_until"), null));
         account.setTrustedUntil(fromText(resultSet.getString("trusted_until"), null));
         account.setLastCodeSentAt(fromText(resultSet.getString("last_code_sent_at"), null));
+        account.setPendingCode(resultSet.getString("pending_code"));
+        account.setPendingEmail(resultSet.getString("pending_email"));
+        account.setPendingPurpose(resultSet.getString("pending_purpose"));
+        account.setPendingExpiresAt(fromText(resultSet.getString("pending_expires_at"), null));
+        account.setEmailVerified(resultSet.getInt("email_verified") == 1);
         return account;
     }
 

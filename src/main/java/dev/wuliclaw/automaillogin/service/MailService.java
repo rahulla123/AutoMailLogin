@@ -15,16 +15,18 @@ public final class MailService {
     private final VerificationService verificationService;
     private final SmtpMailSender smtpMailSender;
     private final StorageProvider storageProvider;
+    private final MessageService messageService;
 
-    public MailService(AutoMailLoginPlugin plugin, VerificationService verificationService, StorageProvider storageProvider) {
+    public MailService(AutoMailLoginPlugin plugin, VerificationService verificationService, StorageProvider storageProvider, MessageService messageService) {
         this.plugin = plugin;
         this.verificationService = verificationService;
         this.smtpMailSender = new SmtpMailSender(plugin);
         this.storageProvider = storageProvider;
+        this.messageService = messageService;
     }
 
     public void sendRegistrationCode(Player player, String email) {
-        send(player, email, VerificationPurpose.REGISTER, "注册验证码", "你正在注册 AutoMailLogin，验证码为：%s\n有效期请查看插件配置。", "§a验证码已发送，请检查邮箱。", "§e测试模式：注册验证码已输出到服务端控制台。", true);
+        send(player, email, VerificationPurpose.REGISTER, "注册验证码", "你正在注册 AutoMailLogin，验证码为：%s\n有效期请查看插件配置。", messageService.get("mail-sent", "验证码已发送，请检查邮箱。"), messageService.get("mail-sent-mock", "测试模式：验证码已输出到控制台。"), true);
     }
 
     public void sendResetPasswordCode(Player player, String email) {
@@ -32,19 +34,10 @@ public final class MailService {
     }
 
     public void sendSecondFactorCode(Player player, String email) {
-        send(player, email, VerificationPurpose.SECOND_FACTOR, "二次验证验证码", "检测到你的账号本次登录需要二次验证，验证码为：%s", "§e检测到本次登录需要二次验证，请检查邮箱验证码。", "§e测试模式：二次验证验证码已输出到服务端控制台。", false);
+        send(player, email, VerificationPurpose.SECOND_FACTOR, "二次验证验证码", "检测到你的账号本次登录需要二次验证，验证码为：%s", messageService.get("second-factor-required", "检测到本次登录需要二次验证，请检查邮箱验证码。"), "§e测试模式：二次验证验证码已输出到服务端控制台。", false);
     }
 
-    private void send(
-            Player player,
-            String email,
-            VerificationPurpose purpose,
-            String subject,
-            String mailTemplate,
-            String smtpMessage,
-            String mockMessage,
-            boolean createIfMissing
-    ) {
+    private void send(Player player, String email, VerificationPurpose purpose, String subject, String mailTemplate, String smtpMessage, String mockMessage, boolean createIfMissing) {
         PlayerAccount account = storageProvider.findByUniqueId(player.getUniqueId()).orElse(null);
         if (account == null && createIfMissing) {
             account = new PlayerAccount(player.getUniqueId(), player.getName());

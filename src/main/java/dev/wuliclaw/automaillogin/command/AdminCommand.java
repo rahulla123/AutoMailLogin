@@ -1,13 +1,13 @@
 package dev.wuliclaw.automaillogin.command;
 
 import dev.wuliclaw.automaillogin.service.AuthService;
+import dev.wuliclaw.automaillogin.service.MessageService;
 import dev.wuliclaw.automaillogin.storage.AuditLogEntry;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,10 +16,12 @@ import java.util.List;
 public final class AdminCommand implements CommandExecutor, TabCompleter {
     private final AuthService authService;
     private final GuiCommand guiCommand;
+    private final MessageService messageService;
 
-    public AdminCommand(AuthService authService, GuiCommand guiCommand) {
+    public AdminCommand(AuthService authService, GuiCommand guiCommand, MessageService messageService) {
         this.authService = authService;
         this.guiCommand = guiCommand;
+        this.messageService = messageService;
     }
 
     @Override
@@ -37,15 +39,13 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
         }
         String subcommand = args[1].toLowerCase();
         String targetName = args[2];
-        Player target = Bukkit.getPlayerExact(targetName);
         switch (subcommand) {
             case "force2fa" -> {
-                if (target == null) {
-                    sender.sendMessage("§cforce2fa 需要目标在线。");
+                if (!authService.forceSecondFactorByName(targetName)) {
+                    sender.sendMessage("§c找不到该玩家或玩家尚未注册。");
                     return true;
                 }
-                authService.forceSecondFactor(target);
-                sender.sendMessage("§a已标记玩家下次登录触发二次验证：" + target.getName());
+                sender.sendMessage("§a已标记玩家下次登录触发二次验证：" + targetName);
                 return true;
             }
             case "status" -> {
@@ -65,21 +65,19 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             case "unbindmail" -> {
-                if (target == null) {
-                    sender.sendMessage("§cunbindmail 需要目标在线。");
+                if (!authService.unbindEmailByName(targetName)) {
+                    sender.sendMessage("§c找不到该玩家或玩家尚未注册。");
                     return true;
                 }
-                authService.unbindEmail(target);
-                sender.sendMessage("§a已解绑玩家邮箱：" + target.getName());
+                sender.sendMessage("§a已解绑玩家邮箱：" + targetName);
                 return true;
             }
             case "resetauth" -> {
-                if (target == null) {
-                    sender.sendMessage("§cresetauth 需要目标在线。");
+                if (!authService.resetAuthStateByName(targetName)) {
+                    sender.sendMessage("§c找不到该玩家或玩家尚未注册。");
                     return true;
                 }
-                authService.resetAuthState(target);
-                sender.sendMessage("§a已重置玩家认证状态：" + target.getName());
+                sender.sendMessage("§a已重置玩家认证状态：" + targetName);
                 return true;
             }
             default -> {

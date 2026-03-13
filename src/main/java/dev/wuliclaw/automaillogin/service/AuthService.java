@@ -6,14 +6,11 @@ import dev.wuliclaw.automaillogin.model.VerificationPurpose;
 import dev.wuliclaw.automaillogin.security.PasswordHasher;
 import dev.wuliclaw.automaillogin.storage.AuditLogEntry;
 import dev.wuliclaw.automaillogin.storage.StorageProvider;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 public final class AuthService {
@@ -27,7 +24,6 @@ public final class AuthService {
     private final PasswordHasher passwordHasher;
     private final SecondFactorService secondFactorService;
     private final AuditLogService auditLogService;
-    private final Map<UUID, Boolean> verifiedEmails = new ConcurrentHashMap<>();
 
     public AuthService(
             AutoMailLoginPlugin plugin,
@@ -77,8 +73,8 @@ public final class AuthService {
         PlayerAccount account = loadOrCreate(player);
         account.setEmail(email);
         account.setTrustedUntil(null);
+        account.setEmailVerified(false);
         storageProvider.save(account);
-        verifiedEmails.put(player.getUniqueId(), false);
         auditLogService.log(player, "REGISTER_MAIL", "Email submitted: " + email);
         mailService.sendRegistrationCode(player, email);
     }
@@ -86,7 +82,9 @@ public final class AuthService {
     public void verifyMail(Player player, String code) {
         boolean success = verificationService.verify(player.getUniqueId(), code, VerificationPurpose.REGISTER);
         if (success) {
-            verifiedEmails.put(player.getUniqueId(), true);
+            PlayerAccount account = loadOrCreate(player);
+            account.setEmailVerified(true);
+            storageProvider.save(account);
             auditLogService.log(player, "VERIFY_MAIL_SUCCESS", "Registration mail verification passed");
             player.sendMessage("§a邮箱验证成功，请继续设置密码。输入 /setpassword <密码> <确认密码>");
             return;
@@ -106,12 +104,12 @@ public final class AuthService {
             player.sendMessage("§c密码长度不足。");
             return;
         }
-        if (!verifiedEmails.getOrDefault(player.getUniqueId(), false)) {
+        PlayerAccount account = loadOrCreate(player);
+        if (!account.isEmailVerified()) {
             auditLogService.log(player, "SET_PASSWORD_FAILED", "Email not verified before password set");
             player.sendMessage("§c请先完成邮箱验证码确认。");
             return;
         }
-        PlayerAccount account = loadOrCreate(player);
         account.setPasswordHash(passwordHasher.hash(password));
         account.setSecondFactorVerified(false);
         account.setFailedLoginAttempts(0);
@@ -162,12 +160,12 @@ public final class AuthService {
     }
 
     public void verifySecondFactor(Player player, String code) {
-        if (!secondFactorService.isPending(player)) {
+        if (!secondFactorService.isPending(player) && verificationService.get(player.getUniqueId()) == null) {
             auditLogService.log(player, "VERIFY_2FA_FAILED", "No pending second factor session");
             player.sendMessage("§c你当前没有待处理的二次验证。");
             return;
         }
-        boolean success = secondFactorService.verify(player, code);
+        boolean success = verificationService.verify(player.getUniqueId(), code, VerificationPurpose.SECOND_FACTOR);
         if (!success) {
             auditLogService.log(player, "VERIFY_2FA_FAILED", "Second factor code invalid or expired");
             player.sendMessage("§c二次验证验证码错误或已过期。");
@@ -177,6 +175,7 @@ public final class AuthService {
         if (account != null) {
             completeLogin(player, account);
         }
+        secondFactorService.clear(player.getUniqueId());
         auditLogService.log(player, "VERIFY_2FA_SUCCESS", "Second factor verified and login completed");
         player.sendMessage("§a二次验证成功，已完成登录。");
     }
@@ -219,6 +218,22 @@ public final class AuthService {
         player.sendMessage("§a密码重置成功，请重新登录。");
     }
 
+    public boolean forceSecondFactorByName(String playerName) {
+        Player online = plugin.getServer().getPlayerExact(playerName);
+        if (online != null) {
+            forceSecondFactor(online);
+            return true;
+        }
+        PlayerAccount account = storageProvider.findByPlayerName(playerName).orElse(null);
+        if (account == null) {
+            return false;
+        }
+        secondFactorService.markAdminForce(account.getUniqueId());
+        account.setTrustedUntil(null);
+        storageProvider.save(account);
+        return true;
+    }
+
     public void forceSecondFactor(Player player) {
         secondFactorService.markAdminForce(player.getUniqueId());
         PlayerAccount account = loadOrCreate(player);
@@ -229,18 +244,55 @@ public final class AuthService {
         player.sendMessage("§e管理员已要求你下次登录进行邮箱二次验证。");
     }
 
+    public boolean unbindEmailByName(String playerName) {
+        Player online = plugin.getServer().getPlayerExact(playerName);
+        if (online != null) {
+            unbindEmail(online);
+            return true;
+        }
+        PlayerAccount account = storageProvider.findByPlayerName(playerName).orElse(null);
+        if (account == null) {
+            return false;
+        }
+        account.setEmail(null);
+        account.setEmailVerified(false);
+        account.setSecondFactorVerified(false);
+        account.setTrustedUntil(null);
+        storageProvider.save(account);
+        return true;
+    }
+
     public void unbindEmail(Player player) {
         PlayerAccount account = storageProvider.findByUniqueId(player.getUniqueId()).orElse(null);
         if (account == null) {
             return;
         }
         account.setEmail(null);
+        account.setEmailVerified(false);
         account.setSecondFactorVerified(false);
         account.setTrustedUntil(null);
         storageProvider.save(account);
         sessionService.markUnauthenticated(player.getUniqueId());
         auditLogService.log(player, "ADMIN_UNBIND_EMAIL", "Admin removed bound email");
         player.sendMessage("§e你的绑定邮箱已被管理员解除，请重新绑定。");
+    }
+
+    public boolean resetAuthStateByName(String playerName) {
+        Player online = plugin.getServer().getPlayerExact(playerName);
+        if (online != null) {
+            resetAuthState(online);
+            return true;
+        }
+        PlayerAccount account = storageProvider.findByPlayerName(playerName).orElse(null);
+        if (account == null) {
+            return false;
+        }
+        secondFactorService.clear(account.getUniqueId());
+        account.setTrustedUntil(null);
+        account.setLockedUntil(null);
+        account.setFailedLoginAttempts(0);
+        storageProvider.save(account);
+        return true;
     }
 
     public void resetAuthState(Player player) {
@@ -269,12 +321,14 @@ public final class AuthService {
         }
         return "§6[AutoMailLogin] §r玩家=" + account.getPlayerName()
                 + " | email=" + account.getEmail()
+                + " | emailVerified=" + account.isEmailVerified()
                 + " | registeredAt=" + account.getRegisteredAt()
                 + " | lastLoginAt=" + account.getLastLoginAt()
                 + " | lastIp=" + account.getLastIp()
                 + " | failedAttempts=" + account.getFailedLoginAttempts()
                 + " | lockedUntil=" + account.getLockedUntil()
                 + " | trustedUntil=" + account.getTrustedUntil()
+                + " | pendingPurpose=" + account.getPendingPurpose()
                 + " | authenticated=" + onlineAuthenticated;
     }
 
@@ -292,10 +346,6 @@ public final class AuthService {
             return List.of();
         }
         return auditLogService.getRecent(account.getUniqueId(), limit);
-    }
-
-    public PlayerAccount findAccountByName(String playerName) {
-        return storageProvider.findByPlayerName(playerName).orElse(null);
     }
 
     private void completeLogin(Player player, PlayerAccount account) {

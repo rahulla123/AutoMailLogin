@@ -8,6 +8,7 @@ import dev.wuliclaw.automaillogin.security.PasswordHasher;
 import dev.wuliclaw.automaillogin.service.AuthService;
 import dev.wuliclaw.automaillogin.service.AuditLogService;
 import dev.wuliclaw.automaillogin.service.MailService;
+import dev.wuliclaw.automaillogin.service.MessageService;
 import dev.wuliclaw.automaillogin.service.PlayerSessionService;
 import dev.wuliclaw.automaillogin.service.SecondFactorService;
 import dev.wuliclaw.automaillogin.service.VerificationService;
@@ -25,24 +26,26 @@ public final class AutoMailLoginPlugin extends JavaPlugin {
     private AuthService authService;
     private StorageProvider storageProvider;
     private SecondFactorService secondFactorService;
+    private MessageService messageService;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         saveResource("messages.yml", false);
 
+        this.messageService = new MessageService(this);
         this.playerSessionService = new PlayerSessionService();
         this.storageProvider = createStorageProvider();
         this.storageProvider.initialize();
         this.verificationService = new VerificationService(this, storageProvider);
         this.secondFactorService = new SecondFactorService(this, verificationService, storageProvider);
-        this.mailService = new MailService(this, verificationService, storageProvider);
+        this.mailService = new MailService(this, verificationService, storageProvider, messageService);
         AuditLogService auditLogService = new AuditLogService((AbstractSqlStorageProvider) this.storageProvider);
         this.authService = new AuthService(this, playerSessionService, verificationService, mailService, storageProvider, new PasswordHasher(), secondFactorService, auditLogService);
 
-        AuthCommand authCommand = new AuthCommand(authService);
-        GuiCommand guiCommand = new GuiCommand(authService);
-        AdminCommand adminCommand = new AdminCommand(authService, guiCommand);
+        AuthCommand authCommand = new AuthCommand(authService, messageService);
+        GuiCommand guiCommand = new GuiCommand(authService, messageService);
+        AdminCommand adminCommand = new AdminCommand(authService, guiCommand, messageService);
         registerCommand("mailregister", authCommand);
         registerCommand("mailcode", authCommand);
         registerCommand("setpassword", authCommand);
@@ -53,7 +56,7 @@ public final class AutoMailLoginPlugin extends JavaPlugin {
         registerCommand("automaillogin", adminCommand);
 
         getServer().getPluginManager().registerEvents(
-                new AuthRestrictionListener(this, playerSessionService, authService),
+                new AuthRestrictionListener(this, playerSessionService, authService, messageService),
                 this
         );
     }

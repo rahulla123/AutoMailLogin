@@ -9,14 +9,11 @@ import dev.wuliclaw.automaillogin.storage.StorageProvider;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class VerificationService {
     private final AutoMailLoginPlugin plugin;
     private final SecureRandom secureRandom = new SecureRandom();
-    private final Map<UUID, PendingVerification> pendingVerifications = new ConcurrentHashMap<>();
     private final StorageProvider storageProvider;
 
     public VerificationService(AutoMailLoginPlugin plugin, StorageProvider storageProvider) {
@@ -29,7 +26,14 @@ public final class VerificationService {
         int expireSeconds = plugin.getConfig().getInt("mail.code-expire-seconds", 300);
         String code = generateCode(codeLength);
         PendingVerification verification = new PendingVerification(email, code, purpose, Instant.now().plusSeconds(expireSeconds));
-        pendingVerifications.put(uniqueId, verification);
+        PlayerAccount account = storageProvider.findByUniqueId(uniqueId).orElse(null);
+        if (account != null) {
+            account.setPendingCode(code);
+            account.setPendingEmail(email);
+            account.setPendingPurpose(purpose.name());
+            account.setPendingExpiresAt(verification.expiresAt());
+            storageProvider.save(account);
+        }
         return verification;
     }
 
@@ -56,19 +60,36 @@ public final class VerificationService {
     }
 
     public boolean verify(UUID uniqueId, String code, VerificationPurpose purpose) {
-        PendingVerification verification = pendingVerifications.get(uniqueId);
-        if (verification == null || verification.isExpired() || verification.purpose() != purpose) {
+        PlayerAccount account = storageProvider.findByUniqueId(uniqueId).orElse(null);
+        if (account == null || account.getPendingCode() == null || account.getPendingPurpose() == null || account.getPendingExpiresAt() == null) {
             return false;
         }
-        boolean success = verification.code().equals(code);
+        if (Instant.now().isAfter(account.getPendingExpiresAt())) {
+            account.clearPendingVerification();
+            storageProvider.save(account);
+            return false;
+        }
+        if (!purpose.name().equals(account.getPendingPurpose())) {
+            return false;
+        }
+        boolean success = account.getPendingCode().equals(code);
         if (success) {
-            pendingVerifications.remove(uniqueId);
+            account.clearPendingVerification();
+            storageProvider.save(account);
         }
         return success;
     }
 
     public PendingVerification get(UUID uniqueId) {
-        return pendingVerifications.get(uniqueId);
+        PlayerAccount account = storageProvider.findByUniqueId(uniqueId).orElse(null);
+        if (account == null || account.getPendingCode() == null || account.getPendingPurpose() == null || account.getPendingExpiresAt() == null) {
+            return null;
+        }
+        try {
+            return new PendingVerification(account.getPendingEmail(), account.getPendingCode(), VerificationPurpose.valueOf(account.getPendingPurpose()), account.getPendingExpiresAt());
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
     }
 
     private String generateCode(int length) {

@@ -1,6 +1,7 @@
 package dev.wuliclaw.automaillogin.command;
 
 import dev.wuliclaw.automaillogin.service.AuthService;
+import dev.wuliclaw.automaillogin.service.MessageService;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -12,22 +13,24 @@ import java.util.List;
 
 public final class AuthCommand implements CommandExecutor, TabCompleter {
     private final AuthService authService;
+    private final MessageService messageService;
 
-    public AuthCommand(AuthService authService) {
+    public AuthCommand(AuthService authService, MessageService messageService) {
         this.authService = authService;
+        this.messageService = messageService;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("该命令只能由玩家执行。");
+            sender.sendMessage(messageService.get("player-only", "该命令只能由玩家执行。"));
             return true;
         }
 
         switch (command.getName().toLowerCase()) {
             case "mailregister" -> {
                 if (args.length != 1) {
-                    player.sendMessage("用法: /mailregister <邮箱>");
+                    player.sendMessage(messageService.get("usage-mailregister", "用法: /mailregister <邮箱>"));
                     return true;
                 }
                 authService.registerMail(player, args[0]);
@@ -35,7 +38,7 @@ public final class AuthCommand implements CommandExecutor, TabCompleter {
             }
             case "mailcode" -> {
                 if (args.length != 1) {
-                    player.sendMessage("用法: /mailcode <验证码>");
+                    player.sendMessage(messageService.get("usage-mailcode", "用法: /mailcode <验证码>"));
                     return true;
                 }
                 authService.verifyMail(player, args[0]);
@@ -43,7 +46,7 @@ public final class AuthCommand implements CommandExecutor, TabCompleter {
             }
             case "setpassword" -> {
                 if (args.length != 2) {
-                    player.sendMessage("用法: /setpassword <密码> <确认密码>");
+                    player.sendMessage(messageService.get("usage-setpassword", "用法: /setpassword <密码> <确认密码>"));
                     return true;
                 }
                 authService.setPassword(player, args[0], args[1]);
@@ -51,7 +54,7 @@ public final class AuthCommand implements CommandExecutor, TabCompleter {
             }
             case "login" -> {
                 if (args.length != 1) {
-                    player.sendMessage("用法: /login <密码>");
+                    player.sendMessage(messageService.get("usage-login", "用法: /login <密码>"));
                     return true;
                 }
                 authService.login(player, args[0]);
@@ -59,7 +62,7 @@ public final class AuthCommand implements CommandExecutor, TabCompleter {
             }
             case "forgotpassword" -> {
                 if (args.length != 1) {
-                    player.sendMessage("用法: /forgotpassword <邮箱>");
+                    player.sendMessage(messageService.get("usage-forgotpassword", "用法: /forgotpassword <邮箱>"));
                     return true;
                 }
                 authService.forgotPassword(player, args[0]);
@@ -67,7 +70,7 @@ public final class AuthCommand implements CommandExecutor, TabCompleter {
             }
             case "resetpassword" -> {
                 if (args.length != 3) {
-                    player.sendMessage("用法: /resetpassword <验证码> <新密码> <确认密码>");
+                    player.sendMessage(messageService.get("usage-resetpassword", "用法: /resetpassword <验证码> <新密码> <确认密码>"));
                     return true;
                 }
                 authService.resetPassword(player, args[0], args[1], args[2]);
@@ -75,7 +78,7 @@ public final class AuthCommand implements CommandExecutor, TabCompleter {
             }
             case "mail2fa" -> {
                 if (args.length != 1) {
-                    player.sendMessage("用法: /mail2fa <验证码>");
+                    player.sendMessage(messageService.get("usage-mail2fa", "用法: /mail2fa <验证码>"));
                     return true;
                 }
                 authService.verifySecondFactor(player, args[0]);
