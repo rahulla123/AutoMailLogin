@@ -21,6 +21,8 @@ mail:
   max-verify-attempts: 5
   verify-lock-seconds: 300
   mock-log-sensitive-content: false
+  allowed-domains: []
+  blocked-domains: []
   smtp:
     host: smtp.example.com
     port: 587

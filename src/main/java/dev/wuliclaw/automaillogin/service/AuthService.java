@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -75,6 +76,11 @@ public final class AuthService {
     public void registerMail(Player player, String email) {
         if (!EMAIL_PATTERN.matcher(email).matches()) {
             player.sendMessage("§c邮箱格式不正确。");
+            return;
+        }
+        String domainError = validateEmailDomain(email);
+        if (domainError != null) {
+            player.sendMessage(domainError);
             return;
         }
         PlayerAccount account = loadOrCreate(player);
@@ -406,6 +412,35 @@ public final class AuthService {
             return "***" + email.substring(Math.max(atIndex, 0));
         }
         return email.substring(0, 1) + "***" + email.substring(atIndex);
+    }
+
+    private String validateEmailDomain(String email) {
+        int atIndex = email.lastIndexOf('@');
+        if (atIndex < 0 || atIndex >= email.length() - 1) {
+            return "§c邮箱格式不正确。";
+        }
+        String domain = email.substring(atIndex + 1).toLowerCase(Locale.ROOT);
+        List<String> allowedDomains = plugin.getConfig().getStringList("mail.allowed-domains").stream()
+                .map(value -> value.toLowerCase(Locale.ROOT))
+                .toList();
+        List<String> blockedDomains = plugin.getConfig().getStringList("mail.blocked-domains").stream()
+                .map(value -> value.toLowerCase(Locale.ROOT))
+                .toList();
+        if (!allowedDomains.isEmpty() && !allowedDomains.contains(domain)) {
+            return messageServiceOrDefault("email-domain-not-allowed", "§c该邮箱域名不被允许使用。");
+        }
+        if (blockedDomains.contains(domain)) {
+            return messageServiceOrDefault("email-domain-blocked", "§c该邮箱域名已被禁止使用。");
+        }
+        return null;
+    }
+
+    private String messageServiceOrDefault(String key, String fallback) {
+        java.io.File file = new java.io.File(plugin.getDataFolder(), "messages.yml");
+        if (!file.exists()) {
+            return fallback;
+        }
+        return org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(file).getString(key, fallback);
     }
 
     private String maskIp(String ip) {
