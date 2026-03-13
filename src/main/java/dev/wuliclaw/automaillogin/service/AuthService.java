@@ -45,6 +45,10 @@ public final class AuthService {
         this.auditLogService = auditLogService;
     }
 
+    private String msg(String key, String fallback) {
+        return plugin.getConfig() != null ? fallback : fallback;
+    }
+
     public void handleJoin(Player player) {
         sessionService.markUnauthenticated(player.getUniqueId());
         auditLogService.log(player, "PLAYER_JOIN", "Player joined and entered unauthenticated state");
