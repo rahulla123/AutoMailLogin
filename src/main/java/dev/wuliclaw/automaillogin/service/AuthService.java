@@ -1,6 +1,7 @@
 package dev.wuliclaw.automaillogin.service;
 
 import dev.wuliclaw.automaillogin.AutoMailLoginPlugin;
+import dev.wuliclaw.automaillogin.mail.MailTemplateType;
 import dev.wuliclaw.automaillogin.model.PlayerAccount;
 import dev.wuliclaw.automaillogin.model.VerificationPurpose;
 import dev.wuliclaw.automaillogin.security.PasswordHasher;
@@ -52,6 +53,10 @@ public final class AuthService {
 
     public void sendTestMailAsync(String email, java.util.function.Consumer<Boolean> callback) {
         mailService.sendTestMailAsync(email, callback);
+    }
+
+    public void sendPreviewMailAsync(MailTemplateType templateType, String email, java.util.function.Consumer<Boolean> callback) {
+        mailService.sendPreviewMailAsync(templateType, email, callback);
     }
 
     public void handleJoin(Player player) {

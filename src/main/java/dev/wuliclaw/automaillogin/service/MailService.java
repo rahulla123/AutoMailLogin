@@ -45,7 +45,11 @@ public final class MailService {
     }
 
     public void sendTestMailAsync(String email, Consumer<Boolean> callback) {
-        RenderedMailTemplate template = templateService.render(MailTemplateType.TEST_SMTP, baseVariables(null, email, null));
+        sendPreviewMailAsync(MailTemplateType.TEST_SMTP, email, callback);
+    }
+
+    public void sendPreviewMailAsync(MailTemplateType templateType, String email, Consumer<Boolean> callback) {
+        RenderedMailTemplate template = templateService.render(templateType, baseVariables(null, email, null));
         String mode = plugin.getConfig().getString("mail.mode", "mock");
         if (!"smtp".equalsIgnoreCase(mode)) {
             logMockMail(template, null, email);

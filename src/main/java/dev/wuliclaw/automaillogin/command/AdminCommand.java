@@ -1,6 +1,7 @@
 package dev.wuliclaw.automaillogin.command;
 
 import dev.wuliclaw.automaillogin.AutoMailLoginPlugin;
+import dev.wuliclaw.automaillogin.mail.MailTemplateType;
 import dev.wuliclaw.automaillogin.service.AuthService;
 import dev.wuliclaw.automaillogin.service.MessageService;
 import dev.wuliclaw.automaillogin.storage.AuditLogEntry;
@@ -41,6 +42,22 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§aAutoMailLogin 配置、消息和邮件模板已重载。");
             return true;
         }
+        if (args.length >= 4 && "admin".equalsIgnoreCase(args[0]) && "previewmail".equalsIgnoreCase(args[1])) {
+            MailTemplateType templateType = MailTemplateType.fromInput(args[2]);
+            if (templateType == null) {
+                sender.sendMessage(messageService.get("previewmail-invalid-type", "模板类型无效，可用值：register、reset-password、second-factor、test-smtp。"));
+                return true;
+            }
+            if (!authService.sendTestMail(args[3])) {
+                sender.sendMessage(messageService.get("previewmail-failed", "模板预览邮件发送失败，请检查邮箱格式、SMTP 配置或服务端日志。"));
+                return true;
+            }
+            sender.sendMessage(messageService.get("previewmail-queued", "模板预览邮件正在异步发送，请稍后检查邮箱或服务端日志。"));
+            authService.sendPreviewMailAsync(templateType, args[3], success -> sender.sendMessage(success
+                    ? messageService.get("previewmail-sent", "模板预览邮件已发送，请检查邮箱或服务端日志。")
+                    : messageService.get("previewmail-failed", "模板预览邮件发送失败，请检查邮箱格式、SMTP 配置或服务端日志。")));
+            return true;
+        }
         if (args.length >= 3 && "admin".equalsIgnoreCase(args[0]) && "testsmtp".equalsIgnoreCase(args[1])) {
             boolean valid = authService.sendTestMail(args[2]);
             if (!valid) {
@@ -52,7 +69,7 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         if (args.length < 3 || !"admin".equalsIgnoreCase(args[0])) {
-            sender.sendMessage("§e用法: /automaillogin admin <reload|force2fa|status|logs|unbindmail|resetauth|testsmtp> <player|email>");
+            sender.sendMessage("§e用法: /automaillogin admin <reload|previewmail|force2fa|status|logs|unbindmail|resetauth|testsmtp> <player|email>");
             return true;
         }
         String subcommand = args[1].toLowerCase();
@@ -99,7 +116,7 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             default -> {
-                sender.sendMessage("§e用法: /automaillogin admin <reload|force2fa|status|logs|unbindmail|resetauth|testsmtp> <player|email>");
+                sender.sendMessage("§e用法: /automaillogin admin <reload|previewmail|force2fa|status|logs|unbindmail|resetauth|testsmtp> <player|email>");
                 return true;
             }
         }
@@ -111,9 +128,12 @@ public final class AdminCommand implements CommandExecutor, TabCompleter {
             return List.of("admin", "menu");
         }
         if (args.length == 2 && "admin".equalsIgnoreCase(args[0])) {
-            return List.of("reload", "force2fa", "status", "logs", "unbindmail", "resetauth", "testsmtp");
+            return List.of("reload", "previewmail", "force2fa", "status", "logs", "unbindmail", "resetauth", "testsmtp");
         }
-        if (args.length == 3 && "admin".equalsIgnoreCase(args[0]) && !"testsmtp".equalsIgnoreCase(args[1]) && !"reload".equalsIgnoreCase(args[1])) {
+        if (args.length == 3 && "admin".equalsIgnoreCase(args[0]) && "previewmail".equalsIgnoreCase(args[1])) {
+            return List.of("register", "reset-password", "second-factor", "test-smtp");
+        }
+        if (args.length == 3 && "admin".equalsIgnoreCase(args[0]) && !"testsmtp".equalsIgnoreCase(args[1]) && !"reload".equalsIgnoreCase(args[1]) && !"previewmail".equalsIgnoreCase(args[1])) {
             List<String> players = new ArrayList<>();
             Bukkit.getOnlinePlayers().forEach(player -> players.add(player.getName()));
             return players;

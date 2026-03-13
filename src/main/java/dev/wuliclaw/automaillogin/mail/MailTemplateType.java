@@ -15,4 +15,13 @@ public enum MailTemplateType {
     public String filePrefix() {
         return filePrefix;
     }
+
+    public static MailTemplateType fromInput(String value) {
+        for (MailTemplateType type : values()) {
+            if (type.filePrefix.equalsIgnoreCase(value) || type.name().equalsIgnoreCase(value.replace('-', '_'))) {
+                return type;
+            }
+        }
+        return null;
+    }
 }
