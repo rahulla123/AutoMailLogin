@@ -13,10 +13,18 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    testImplementation("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     implementation("org.xerial:sqlite-jdbc:3.49.1.0")
     implementation("com.mysql:mysql-connector-j:9.2.0")
     implementation("org.eclipse.angus:jakarta.mail:2.0.3")
     implementation("org.mindrot:jbcrypt:0.4")
+
+    testImplementation(platform("org.junit:junit-bom:5.12.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("net.bytebuddy:byte-buddy:1.15.11")
+    testImplementation("net.bytebuddy:byte-buddy-agent:1.15.11")
 }
 
 java {
@@ -43,6 +51,10 @@ tasks.jar {
 tasks.shadowJar {
     archiveClassifier.set("")
     mergeServiceFiles()
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.build {

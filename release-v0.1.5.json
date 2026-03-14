@@ -1,0 +1,9 @@
+{
+  "tag_name": "v0.1.5",
+  "target_commitish": "main",
+  "name": "v0.1.5",
+  "draft": false,
+  "prerelease": false,
+  "generate_release_notes": false,
+  "body": "AutoMailLogin v0.1.5。\n\n本版本更新：\n- 项目基线升级到 Minecraft 1.21+，Paper API 依赖更新为 1.21.4-R0.1-SNAPSHOT\n- plugin.yml 的 api-version 更新为 1.21，明确停止兼容 1.20.x\n- 中英文 README 同步更新，文档明确当前面向 1.21+ 维护\n- 已完成 Paper 1.21.4 本地真实启动验证，插件可正常 load / enable\n- 已验证管理员命令 doctor、reload、testsmtp 可正常执行\n- 默认 SQLite、模板初始化、mock 邮件链路均可正常工作\n- 新增核心自动化测试，覆盖验证码、二次验证、注册、登录、密码重置等关键服务逻辑\n\n兼容性说明：\n- 支持 Paper 1.21.4，并面向 Minecraft 1.21+ 维护\n- 不再兼容 Paper 1.20.6，旧版本服务端会因 api-version=1.21 而拒绝加载\n"
+}
